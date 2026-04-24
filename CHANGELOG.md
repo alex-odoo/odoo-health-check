@@ -2,6 +2,20 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.5.1] - 2026-04-24
+
+### Added
+- Test suite covering Phases 1-5: `tests/test_history_model.py`, `test_cron_override.py`, `test_failure_email.py`, `test_config.py`
+  - Model: defaults, SQL constraint, cascade delete, cleanup with retention variants (positive / zero / invalid param)
+  - Overrides: `_callback` and `method_direct_trigger` on success and failure; `_callback` tolerates `history_id=None`
+  - Email: enqueue on failure with recipients, skip on empty recipients, never on success, comma-separated parsing
+  - Config: settings roundtrip for both params; retention cron and mail template registered and active
+- Test common helper (`tests/common.py`) patches `registry.cursor` so the module's independent-cursor writes ride the test savepoint
+- All tests tagged `post_install`, `-at_install`, `odoo_health_check` - run via `odoo --test-tags odoo_health_check`
+
+### Notes
+- Tests do not execute on Odoo.sh production builds. Push to a dev/staging branch to run in CI
+
 ## [18.0.1.5.0] - 2026-04-24
 
 ### Added
