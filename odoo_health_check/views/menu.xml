@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_root"
+              name="Health Check"
+              sequence="100"/>
+
+    <menuitem id="menu_cron_history"
+              name="Cron History"
+              parent="menu_root"
+              action="ir_cron_history_action"
+              sequence="10"/>
+
+</odoo>

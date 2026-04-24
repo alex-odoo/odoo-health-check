@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
@@ -22,7 +22,11 @@ Targeted at Odoo 18 Enterprise. Community may work but is not tested.
     "license": "LGPL-3",
     "category": "Administration",
     "depends": ["base"],
-    "data": [],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/ir_cron_history_views.xml",
+        "views/menu.xml",
+    ],
     "installable": True,
     "application": False,
     "auto_install": False,
