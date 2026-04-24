@@ -2,6 +2,18 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.4.0] - 2026-04-24
+
+### Added
+- Email alert on cron failure
+  - New dependency: `mail`
+  - `mail.template` `mail_template_cron_failure` with HTML body (cron name, start/end, duration, server, traceback)
+  - `res.config.settings` extension with `odoo_health_notify_emails` (stored in `ir.config_parameter` key `odoo_health_check.notify_emails`)
+  - Settings view block "Health Check" with Notifications setting
+  - New menu: Health Check -> Settings (opens inline settings form scoped to our block)
+  - Email is enqueued (`force_send=False`) in the failure branch of `_odoo_health_log_end`; skipped silently when the setting is empty
+  - Any failure inside the email path is caught and logged - never propagates to the cron runner
+
 ## [18.0.1.3.0] - 2026-04-24
 
 ### Changed

@@ -64,15 +64,48 @@ class IrCron(models.Model):
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
-                env["ir.cron.history"].browse(history_id).write({
+                history = env["ir.cron.history"].browse(history_id)
+                history.write({
                     "state": state,
                     "date_end": fields.Datetime.now(),
                     "duration_sec": duration_sec,
                     "error_traceback": error_traceback,
                 })
+                if state == "failed":
+                    self._odoo_health_send_failure_email(env, history)
         except Exception:
             _logger.exception(
                 "odoo_health_check: failed to finalize cron history id=%s state=%s",
                 history_id,
                 state,
+            )
+
+    @staticmethod
+    def _odoo_health_send_failure_email(env, history):
+        try:
+            emails_param = (env["ir.config_parameter"].sudo()
+                            .get_param("odoo_health_check.notify_emails") or "").strip()
+            if not emails_param:
+                return
+            recipients = [e.strip() for e in emails_param.split(",") if e.strip()]
+            if not recipients:
+                return
+            template = env.ref(
+                "odoo_health_check.mail_template_cron_failure",
+                raise_if_not_found=False,
+            )
+            if not template:
+                _logger.warning(
+                    "odoo_health_check: mail template not found, failure alert skipped"
+                )
+                return
+            template.send_mail(
+                history.id,
+                force_send=False,
+                email_values={"email_to": ",".join(recipients)},
+            )
+        except Exception:
+            _logger.exception(
+                "odoo_health_check: failed to enqueue cron failure email for history_id=%s",
+                history.id,
             )

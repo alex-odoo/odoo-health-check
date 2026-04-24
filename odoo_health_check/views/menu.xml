@@ -11,4 +11,10 @@
               action="ir_cron_history_action"
               sequence="10"/>
 
+    <menuitem id="menu_settings"
+              name="Settings"
+              parent="menu_root"
+              action="action_open_health_check_settings"
+              sequence="90"/>
+
 </odoo>

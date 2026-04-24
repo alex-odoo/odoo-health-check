@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+
+    <record id="mail_template_cron_failure" model="mail.template">
+        <field name="name">Odoo Health Check: Cron Failure</field>
+        <field name="model_id" ref="model_ir_cron_history"/>
+        <field name="subject">[Odoo Health] Cron failure: {{ object.cron_id.name }} on {{ object.server_name }}</field>
+        <field name="email_from">{{ (object.env.company.email or user.email_formatted) }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family:Arial,sans-serif;font-size:14px;color:#333">
+                <p>A scheduled action has <strong style="color:#b00020">failed</strong> on server <strong t-out="object.server_name"/>.</p>
+                <table style="border-collapse:collapse;margin:12px 0">
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Scheduled action</td><td><strong t-out="object.cron_id.name"/></td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Started</td><td t-out="object.date_start"/></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Ended</td><td t-out="object.date_end"/></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Duration</td><td><t t-out="object.duration_sec"/> s</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Server</td><td t-out="object.server_name"/></tr>
+                </table>
+                <p style="color:#666">Error traceback:</p>
+                <pre style="background:#f5f5f5;padding:12px;border-left:4px solid #b00020;overflow-x:auto" t-out="object.error_traceback"/>
+                <p style="margin-top:18px;color:#888;font-size:12px">
+                    Sent by <strong>Odoo Health Check</strong>. Manage recipients in Settings -&gt; Health Check.
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+</odoo>
