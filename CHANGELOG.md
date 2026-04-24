@@ -2,6 +2,14 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.2.0] - 2026-04-24
+
+### Added
+- `ir.cron._callback` override: every scheduled action execution writes an `ir.cron.history` row
+  - 'running' row created before the call; finalized to 'success' or 'failed' (with full traceback) after
+  - History writes use an independent database cursor so a cron rollback or failure does not erase the audit trail
+  - Writes are sudoed; logging failures are swallowed and logged, never propagate to the cron runner
+
 ## [18.0.1.1.0] - 2026-04-24
 
 ### Added
