@@ -1,6 +1,6 @@
 import socket
 
-from odoo import api, fields, models
+from odoo import fields, models
 
 
 class IrCronHistory(models.Model):
@@ -25,9 +25,9 @@ class IrCronHistory(models.Model):
     date_end = fields.Datetime(string="Ended")
     duration_sec = fields.Float(
         string="Duration (s)",
-        compute="_compute_duration",
-        store=True,
         digits=(12, 3),
+        default=0.0,
+        help="Measured via time.perf_counter() in the _callback override for sub-second precision.",
     )
     state = fields.Selection(
         [
@@ -53,11 +53,3 @@ class IrCronHistory(models.Model):
             "End time must be on or after start time.",
         ),
     ]
-
-    @api.depends("date_start", "date_end")
-    def _compute_duration(self):
-        for rec in self:
-            if rec.date_start and rec.date_end:
-                rec.duration_sec = (rec.date_end - rec.date_start).total_seconds()
-            else:
-                rec.duration_sec = 0.0
