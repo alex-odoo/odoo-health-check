@@ -19,6 +19,17 @@ class IrCron(models.Model):
         self._odoo_health_log_end(history_id, "success", None)
         return result
 
+    def method_direct_trigger(self):
+        for cron in self:
+            history_id = cron._odoo_health_log_start(cron.id)
+            try:
+                super(IrCron, cron).method_direct_trigger()
+            except Exception:
+                cron._odoo_health_log_end(history_id, "failed", traceback.format_exc())
+                raise
+            cron._odoo_health_log_end(history_id, "success", None)
+        return True
+
     def _odoo_health_log_start(self, cron_id):
         """Create a 'running' history record in an independent cursor.
 

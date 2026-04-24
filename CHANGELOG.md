@@ -2,6 +2,12 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.2.1] - 2026-04-24
+
+### Added
+- `ir.cron.method_direct_trigger` override: manual "Run Manually" clicks now also write history rows
+  - Needed because the manual trigger path bypasses `_callback` and would otherwise be invisible in the audit trail
+
 ## [18.0.1.2.0] - 2026-04-24
 
 ### Added
