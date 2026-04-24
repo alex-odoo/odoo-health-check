@@ -15,6 +15,12 @@
                             <field name="odoo_health_notify_emails" placeholder="ops@example.com, admin@example.com"/>
                         </setting>
                     </block>
+                    <block title="Retention" name="health_check_retention">
+                        <setting id="health_check_retention_days" string="History Retention (days)"
+                                 help="Cron execution history older than this is deleted daily. Zero or negative disables cleanup.">
+                            <field name="odoo_health_retention_days"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

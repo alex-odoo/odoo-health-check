@@ -2,6 +2,15 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.5.0] - 2026-04-24
+
+### Added
+- Daily retention cleanup
+  - New `ir.cron.history._odoo_health_cleanup()` classmethod deletes rows older than retention window in batches of 5000
+  - New scheduled action `Odoo Health Check: Cron history retention cleanup` runs daily (first run 4h after install)
+  - New config parameter `odoo_health_check.retention_days` (default 30). `<= 0` disables cleanup
+  - Settings view gains a "Retention" block with the new field
+
 ## [18.0.1.4.0] - 2026-04-24
 
 ### Added
