@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.10.4",
+    "version": "18.0.1.10.5",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
@@ -22,6 +22,7 @@ Targeted at Odoo 18 Enterprise. Community may work but is not tested.
     "license": "LGPL-3",
     "category": "Administration",
     "depends": ["base", "mail"],
+    "images": ["static/description/banner.png"],
     "data": [
         "security/ir.model.access.csv",
         "data/mail_template_data.xml",

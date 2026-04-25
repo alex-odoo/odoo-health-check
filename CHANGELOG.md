@@ -2,12 +2,23 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.5] - 2026-04-25
+
+### Fixed
+- apps.odoo.com cover image: declare `banner.png` via the official
+  `"images"` manifest key (Odoo's documented convention - see
+  `odoo/modules/module.py` `'images': [],  # website`). The first entry
+  becomes the cover/thumbnail on apps.odoo.com after Re-scan. The
+  earlier 1.10.4 attempt (first `<img>` in index.html) did not work -
+  apps.odoo.com only reads the manifest field for the cover slot.
+
 ## [18.0.1.10.4] - 2026-04-25
 
 ### Fixed
-- apps.odoo.com cover image (thumbnail) now picked up correctly by
-  adding `banner.png` as the first `<img>` in `static/description/index.html`.
-  Resolves the 4/5 score warning "This module has no cover image (thumbnail)".
+- apps.odoo.com cover image (thumbnail) attempt #1: added `banner.png`
+  as the first `<img>` in `static/description/index.html`. Did not
+  resolve the score warning - cover slot stayed empty. See 1.10.5 for
+  the actual fix.
 
 ## [18.0.1.10.3] - 2026-04-25
 
