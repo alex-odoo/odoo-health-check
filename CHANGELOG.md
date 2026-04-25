@@ -2,6 +2,20 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.8.0] - 2026-04-25
+
+### Added
+- Monthly PostgreSQL growth report (Phase 8)
+  - Cron `Odoo Health Check: Monthly PostgreSQL growth report` runs on the 1st of each month at 08:00 (`interval_type='months'`)
+  - SQL: top-10 tables by `pg_total_relation_size`, excluding `pg_catalog` / `information_schema`. Row count uses `pg_class.reltuples` estimate (last ANALYZE) - much faster than COUNT(*) and accurate enough for trend reports
+  - Snapshot stored in `health.check.result.details_json`: `{db_name, total_db_bytes, total_db_bytes_delta, tables: [{name, total_bytes, table_bytes, row_estimate, total_bytes_delta, row_estimate_delta}], previous_report_id}`. Each new run looks up the previous `pg_report` row with `status='ok'` and computes deltas vs that snapshot. New tables show `null` deltas (rendered as "new" in the email)
+  - New mail template `mail_template_pg_monthly` with HTML table of top-10 tables + size + Δ size + rows + Δ rows + DB size summary. Subject: `[Odoo Health] PG monthly report: <db> (YYYY-MM)`. Uses `_get_parsed_details()`, `_human_bytes()`, `_human_delta_bytes()` template helpers on the record
+  - Email is sent every run (it's a digest, not a transition alert) when `odoo_health_check.pg_report_emails` is non-empty. Empty recipients = report row still created, just no email
+  - SQL failure → row with `status='error'` and traceback in `details_json`. Cron stays green
+- Settings: new "PostgreSQL Monthly Report" block with `odoo_health_pg_report_emails`
+- Menu: new "Health Check -> PG Reports" filtered to `check_type='pg_report'` (Disk Checks menu's domain stays `disk_root + disk_filestore`)
+- Tests (`tests/test_pg_report.py`, 4 classes, 14 tests): real SQL against test DB validates query syntax + system-schema exclusion + db_size; mocked-SQL tests cover snapshot shape, MoM delta computation, new-table handling, email gating, error path, settings roundtrip, template + cron registration, byte formatters
+
 ## [18.0.1.7.0] - 2026-04-25
 
 ### Added

@@ -4,3 +4,4 @@ from . import test_failure_email
 from . import test_config
 from . import test_disk_check
 from . import test_disk_alert
+from . import test_pg_report

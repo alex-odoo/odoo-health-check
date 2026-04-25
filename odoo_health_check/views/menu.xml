@@ -17,6 +17,12 @@
               action="health_check_result_action"
               sequence="20"/>
 
+    <menuitem id="menu_pg_reports"
+              name="PG Reports"
+              parent="menu_root"
+              action="health_check_pg_report_action"
+              sequence="30"/>
+
     <menuitem id="menu_settings"
               name="Settings"
               parent="menu_root"

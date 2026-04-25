@@ -35,6 +35,12 @@
                             <field name="odoo_health_disk_alert_emails" placeholder="ops@example.com, sysadmin@example.com"/>
                         </setting>
                     </block>
+                    <block title="PostgreSQL Monthly Report" name="health_check_pg_report">
+                        <setting id="health_check_pg_report_emails" string="PG Report Emails"
+                                 help="Comma-separated recipients for the monthly PostgreSQL growth report (sent on the 1st of each month at 08:00). Leave empty to disable email - the report row is still created.">
+                            <field name="odoo_health_pg_report_emails" placeholder="ops@example.com, dba@example.com"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

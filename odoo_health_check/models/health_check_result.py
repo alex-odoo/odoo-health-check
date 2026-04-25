@@ -13,6 +13,46 @@ DEFAULT_CRITICAL_PCT = 90.0
 # severity ordering for transition detection
 _SEVERITY = {"ok": 0, "warn": 1, "critical": 2}
 
+# Top tables by total relation size (table + indexes + toast). Excludes
+# system schemas. reltuples is PostgreSQL's row estimate from the last
+# ANALYZE - much faster than COUNT(*) on large tables and accurate enough
+# for a monthly trend report.
+_PG_TOP_TABLES_SQL = """
+    SELECT
+        c.relname AS table_name,
+        pg_total_relation_size(c.oid)::bigint AS total_bytes,
+        pg_relation_size(c.oid)::bigint AS table_bytes,
+        c.reltuples::bigint AS row_estimate
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind = 'r'
+      AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+    ORDER BY pg_total_relation_size(c.oid) DESC
+    LIMIT %s
+"""
+
+
+def _human_bytes(n):
+    """Format a byte count like '1.2 GB'. Handles negative values."""
+    if n is None:
+        return ""
+    sign = "-" if n < 0 else ""
+    n = abs(n)
+    for unit in ("B", "KB", "MB", "GB", "TB", "PB"):
+        if n < 1024.0:
+            return f"{sign}{n:.1f} {unit}"
+        n /= 1024.0
+    return f"{sign}{n:.1f} EB"
+
+
+def _human_delta_bytes(n):
+    """Format a byte delta with explicit sign: '+1.2 GB' or '-300 MB'."""
+    if n is None:
+        return ""
+    if n == 0:
+        return "0 B"
+    return ("+" if n > 0 else "") + _human_bytes(n)
+
 
 class HealthCheckResult(models.Model):
     _name = "health.check.result"
@@ -218,3 +258,165 @@ class HealthCheckResult(models.Model):
             "odoo_health_check.disk_alert_emails", default="",
         ) or ""
         return [e.strip() for e in raw.split(",") if e.strip()]
+
+    # ------------------------------------------------------------------
+    # PG monthly growth report (Phase 8)
+    # ------------------------------------------------------------------
+
+    @api.model
+    def _pg_top_tables(self, limit=10):
+        """Return [{name, total_bytes, table_bytes, row_estimate}, ...]
+        for the top-N tables by total relation size, excluding system
+        schemas. Uses pg_class.reltuples (estimate) for row count."""
+        self.env.cr.execute(_PG_TOP_TABLES_SQL, (limit,))
+        return [
+            {
+                "name": row[0],
+                "total_bytes": int(row[1] or 0),
+                "table_bytes": int(row[2] or 0),
+                "row_estimate": int(row[3] or 0),
+            }
+            for row in self.env.cr.fetchall()
+        ]
+
+    @api.model
+    def _pg_db_size(self):
+        """Total size of the current database in bytes."""
+        self.env.cr.execute("SELECT pg_database_size(current_database())::bigint")
+        return int(self.env.cr.fetchone()[0] or 0)
+
+    def _previous_pg_report(self):
+        """Most recent prior pg_report row with status='ok', or empty
+        recordset if none exists."""
+        return self.search(
+            [
+                ("check_type", "=", "pg_report"),
+                ("status", "=", "ok"),
+                ("id", "!=", self.id or 0),
+            ],
+            order="date desc, id desc",
+            limit=1,
+        )
+
+    @staticmethod
+    def _diff_tables(current, previous):
+        """Annotate each entry in `current` with bytes/rows delta vs the
+        same-named row in `previous`. New tables (not in previous) get
+        delta=None to render as 'new' in the email."""
+        prev_by_name = {t["name"]: t for t in previous} if previous else {}
+        for cur in current:
+            prev = prev_by_name.get(cur["name"])
+            if prev is None:
+                cur["total_bytes_delta"] = None
+                cur["row_estimate_delta"] = None
+            else:
+                cur["total_bytes_delta"] = cur["total_bytes"] - prev["total_bytes"]
+                cur["row_estimate_delta"] = (
+                    cur["row_estimate"] - prev["row_estimate"]
+                )
+        return current
+
+    @api.model
+    def _run_pg_report(self):
+        """Generate a monthly PostgreSQL growth report, store the snapshot,
+        and email it to configured recipients. Returns the created record.
+
+        Never raises - SQL or storage failures are captured as a row with
+        status='error' so the cron itself stays green.
+        """
+        try:
+            tables = self._pg_top_tables(limit=10)
+            db_size = self._pg_db_size()
+            previous = self._previous_pg_report()
+            prev_tables = []
+            prev_db_size = None
+            if previous and previous.details_json:
+                try:
+                    prev_data = json.loads(previous.details_json)
+                    prev_tables = prev_data.get("tables") or []
+                    prev_db_size = prev_data.get("total_db_bytes")
+                except (ValueError, TypeError):
+                    prev_tables = []
+            tables = self._diff_tables(tables, prev_tables)
+            payload = {
+                "db_name": self.env.cr.dbname,
+                "total_db_bytes": db_size,
+                "total_db_bytes_delta": (
+                    db_size - prev_db_size if prev_db_size is not None else None
+                ),
+                "tables": tables,
+                "previous_report_id": previous.id if previous else None,
+            }
+            record = self.create({
+                "check_type": "pg_report",
+                "status": "ok",
+                "details_json": json.dumps(payload),
+            })
+        except Exception as exc:  # noqa: BLE001 - infra check, must not fail the cron
+            _logger.exception("odoo_health_check: pg report SQL failed")
+            record = self.create({
+                "check_type": "pg_report",
+                "status": "error",
+                "details_json": json.dumps(
+                    {"error": str(exc), "type": type(exc).__name__}
+                ),
+            })
+            return record
+        record._send_pg_report_email()
+        return record
+
+    def _send_pg_report_email(self):
+        """Send the monthly report. Never raises. Skipped when recipients
+        list is empty (the report row is still created)."""
+        self.ensure_one()
+        if self.status != "ok":
+            return
+        try:
+            recipients = self._get_pg_report_recipients()
+            if not recipients:
+                return
+            template = self.env.ref(
+                "odoo_health_check.mail_template_pg_monthly",
+                raise_if_not_found=False,
+            )
+            if not template:
+                _logger.warning(
+                    "odoo_health_check: pg report template missing, skipping email"
+                )
+                return
+            template.send_mail(
+                self.id,
+                force_send=False,
+                email_values={"email_to": ",".join(recipients)},
+            )
+        except Exception:
+            _logger.exception(
+                "odoo_health_check: failed to enqueue pg report email for result_id=%s",
+                self.id,
+            )
+
+    @api.model
+    def _get_pg_report_recipients(self):
+        raw = self.env["ir.config_parameter"].sudo().get_param(
+            "odoo_health_check.pg_report_emails", default="",
+        ) or ""
+        return [e.strip() for e in raw.split(",") if e.strip()]
+
+    def _get_parsed_details(self):
+        """Return details_json as a dict (empty dict if absent or invalid).
+        Used by mail templates that need to iterate over the snapshot."""
+        self.ensure_one()
+        if not self.details_json:
+            return {}
+        try:
+            return json.loads(self.details_json)
+        except (ValueError, TypeError):
+            return {}
+
+    def _human_bytes(self, n):
+        """Template helper: byte count -> '1.2 GB'."""
+        return _human_bytes(n)
+
+    def _human_delta_bytes(self, n):
+        """Template helper: signed byte delta -> '+1.2 GB'."""
+        return _human_delta_bytes(n)

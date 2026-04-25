@@ -53,4 +53,56 @@
         <field name="auto_delete" eval="True"/>
     </record>
 
+    <record id="mail_template_pg_monthly" model="mail.template">
+        <field name="name">Odoo Health Check: Monthly PG Report</field>
+        <field name="model_id" ref="model_health_check_result"/>
+        <field name="subject">[Odoo Health] PG monthly report: {{ object.env.cr.dbname }} ({{ object.date and object.date.strftime('%Y-%m') or '' }})</field>
+        <field name="email_from">{{ (object.env.company.email or user.email_formatted) }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family:Arial,sans-serif;font-size:14px;color:#333">
+                <t t-set="data" t-value="object._get_parsed_details()"/>
+                <p>Monthly PostgreSQL growth report for database
+                   <strong t-out="data.get('db_name', '?')"/>.</p>
+                <p>
+                    Total DB size: <strong t-out="object._human_bytes(data.get('total_db_bytes', 0))"/>
+                    <t t-if="data.get('total_db_bytes_delta') is not None">
+                        (<t t-out="object._human_delta_bytes(data.get('total_db_bytes_delta'))"/> vs previous report)
+                    </t>
+                </p>
+                <h3 style="margin-top:18px">Top tables</h3>
+                <table style="border-collapse:collapse;font-size:13px">
+                    <thead>
+                        <tr style="background:#f5f5f5">
+                            <th style="text-align:left;padding:6px 12px;border-bottom:1px solid #ddd">Table</th>
+                            <th style="text-align:right;padding:6px 12px;border-bottom:1px solid #ddd">Total size</th>
+                            <th style="text-align:right;padding:6px 12px;border-bottom:1px solid #ddd">Δ Size</th>
+                            <th style="text-align:right;padding:6px 12px;border-bottom:1px solid #ddd">Rows (est.)</th>
+                            <th style="text-align:right;padding:6px 12px;border-bottom:1px solid #ddd">Δ Rows</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="data.get('tables', [])" t-as="t">
+                            <td style="padding:4px 12px;border-bottom:1px solid #eee" t-out="t.get('name')"/>
+                            <td style="padding:4px 12px;text-align:right;border-bottom:1px solid #eee" t-out="object._human_bytes(t.get('total_bytes', 0))"/>
+                            <td style="padding:4px 12px;text-align:right;border-bottom:1px solid #eee">
+                                <t t-if="t.get('total_bytes_delta') is None">new</t>
+                                <t t-else="" t-out="object._human_delta_bytes(t.get('total_bytes_delta'))"/>
+                            </td>
+                            <td style="padding:4px 12px;text-align:right;border-bottom:1px solid #eee" t-out="t.get('row_estimate', 0)"/>
+                            <td style="padding:4px 12px;text-align:right;border-bottom:1px solid #eee">
+                                <t t-if="t.get('row_estimate_delta') is None">new</t>
+                                <t t-elif="t.get('row_estimate_delta') &gt; 0">+<t t-out="t.get('row_estimate_delta')"/></t>
+                                <t t-else="" t-out="t.get('row_estimate_delta')"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top:18px;color:#888;font-size:12px">
+                    Sent monthly by <strong>Odoo Health Check</strong>. Row counts are PostgreSQL estimates from `pg_class.reltuples` (last ANALYZE), not exact COUNT(*). Manage recipients in Settings -&gt; Health Check.
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
 </odoo>

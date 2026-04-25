@@ -95,4 +95,16 @@
         </field>
     </record>
 
+    <record id="health_check_pg_report_action" model="ir.actions.act_window">
+        <field name="name">PG Reports</field>
+        <field name="res_model">health.check.result</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="health_check_result_view_search"/>
+        <field name="domain">[('check_type', '=', 'pg_report')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No monthly PG reports yet.</p>
+            <p>The monthly PostgreSQL growth report runs on the 1st of each month at 08:00. You can also trigger it manually from the cron list.</p>
+        </field>
+    </record>
+
 </odoo>

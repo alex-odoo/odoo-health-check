@@ -40,3 +40,9 @@ class ResConfigSettings(models.TransientModel):
              "transitions from ok to warn or critical (or from warn to critical). "
              "One email per worsening transition - no per-hour spam. Leave empty to disable.",
     )
+    odoo_health_pg_report_emails = fields.Char(
+        string="PG Monthly Report Emails",
+        config_parameter="odoo_health_check.pg_report_emails",
+        help="Comma-separated recipients that receive the monthly PostgreSQL "
+             "growth report on the 1st of each month at 08:00. Leave empty to disable email - the report row is still created.",
+    )
