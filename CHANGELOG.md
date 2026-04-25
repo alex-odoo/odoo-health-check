@@ -2,6 +2,21 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.9.0] - 2026-04-25
+
+### Added
+- Health Check Dashboard (Phase 9)
+  - New `health.check.dashboard` TransientModel — at-a-glance summary of cron health, disk usage, and the latest PostgreSQL growth report
+  - 4 tiles in a single form view:
+    - **Cron health** - failed crons in last 24h / 7d, total cron runs in 7d
+    - **OS root** - status badge (ok / warn / critical / error / unknown), used %, free / total in GB, last sample timestamp
+    - **Filestore** - same fields for the Odoo filestore mount
+    - **Latest PG report** - timestamp, DB size, Δ vs previous report, largest table
+  - No new stored data: `default_get` reads the latest rows from `ir.cron.history` and `health.check.result`. Open the dashboard → fresh snapshot. The Refresh button reopens the action so `default_get` fires again
+  - Empty-state messages for each tile when no underlying data exists yet (fresh install, first month before pg_report cron fires)
+  - New top-level menu "Health Check -> Dashboard" (sequence 5, above Cron History)
+- Tests (`tests/test_dashboard.py`, 11 tests): empty state, latest-row-per-check_type, isolation, error status, human-readable summary, failure window arithmetic across 24h / 7d / outside, pg report latest-ok selection, error-row skip, first-report message, default_get integration, action_refresh shape
+
 ## [18.0.1.8.0] - 2026-04-25
 
 ### Added
