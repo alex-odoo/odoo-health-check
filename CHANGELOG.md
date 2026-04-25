@@ -2,6 +2,13 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.4] - 2026-04-25
+
+### Fixed
+- apps.odoo.com cover image (thumbnail) now picked up correctly by
+  adding `banner.png` as the first `<img>` in `static/description/index.html`.
+  Resolves the 4/5 score warning "This module has no cover image (thumbnail)".
+
 ## [18.0.1.10.3] - 2026-04-25
 
 ### Added
