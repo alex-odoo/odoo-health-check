@@ -11,6 +11,12 @@
               action="ir_cron_history_action"
               sequence="10"/>
 
+    <menuitem id="menu_disk_checks"
+              name="Disk Checks"
+              parent="menu_root"
+              action="health_check_result_action"
+              sequence="20"/>
+
     <menuitem id="menu_settings"
               name="Settings"
               parent="menu_root"

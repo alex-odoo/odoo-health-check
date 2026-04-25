@@ -2,6 +2,17 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.6.0] - 2026-04-25
+
+### Added
+- Disk usage monitoring (Phase 6)
+  - New model `health.check.result` (`check_type`, `date`, `status`, `mount_path`, `total_bytes`, `free_bytes`, `used_pct`, `details_json`). Selection includes `pg_report` to avoid a second selection migration in Phase 8
+  - New classmethod `health.check.result._run_disk_checks()` samples both OS root (`/`) and Odoo filestore (`odoo.tools.config['data_dir']`), creating one row per target. Per-target failures are isolated and recorded with `status='error'` so the cron itself never crashes
+  - New scheduled action `Odoo Health Check: Disk usage check` runs hourly (first run 5min after install)
+  - Default thresholds (used %): `<80` ok, `80-90` warn, `>=90` critical. Phase 7 will make these configurable; the seam lives in `_disk_thresholds()` for a single override point
+- Views: list / form / search on `health.check.result` with status-badge decorations and Last 24h / 7d filters; new menu "Health Check -> Disk Checks" (action filtered to disk_root + disk_filestore)
+- Tests (`tests/test_disk_check.py`): threshold boundaries, mocked `shutil.disk_usage` happy paths for ok / warn / critical, zero-total guard, OSError isolation per target, cron registered + active
+
 ## [18.0.1.5.1] - 2026-04-24
 
 ### Added
