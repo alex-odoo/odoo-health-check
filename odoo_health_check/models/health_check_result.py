@@ -45,8 +45,11 @@ class HealthCheckResult(models.Model):
         index=True,
     )
     mount_path = fields.Char(string="Mount / Path")
-    total_bytes = fields.Integer()
-    free_bytes = fields.Integer()
+    # Float(digits=(20,0)) maps to PostgreSQL numeric(20,0) which holds any
+    # realistic disk size in bytes. fields.Integer is int4 (~2.1 GB ceiling)
+    # and overflows on any non-trivial volume.
+    total_bytes = fields.Float(digits=(20, 0))
+    free_bytes = fields.Float(digits=(20, 0))
     used_pct = fields.Float(string="Used %", digits=(5, 2))
     details_json = fields.Text(
         string="Details (JSON)",
@@ -105,8 +108,8 @@ class HealthCheckResult(models.Model):
                 "check_type": check_type,
                 "status": self._classify_disk(used_pct),
                 "mount_path": path,
-                "total_bytes": int(usage.total),
-                "free_bytes": int(usage.free),
+                "total_bytes": float(usage.total),
+                "free_bytes": float(usage.free),
                 "used_pct": round(used_pct, 2),
             }
         except Exception as exc:  # noqa: BLE001 - infra check, must not fail the cron

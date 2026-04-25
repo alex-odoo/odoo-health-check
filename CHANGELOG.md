@@ -2,6 +2,17 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.6.1] - 2026-04-25
+
+### Fixed
+- `health.check.result.total_bytes` and `free_bytes` were `fields.Integer`,
+  which maps to PostgreSQL `int4` (~2.1 GB ceiling). Any realistic volume
+  triggered `psycopg2.errors.NumericValueOutOfRange` on insert. Switched
+  both to `fields.Float(digits=(20, 0))` (numeric(20,0)). Caught live on
+  test18 — first cron run after install raised on disk total ~50 GB
+- Added regression test `test_sample_disk_handles_large_byte_counts`
+  (4 TB volume) to prevent reintroduction
+
 ## [18.0.1.6.0] - 2026-04-25
 
 ### Added

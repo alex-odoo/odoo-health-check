@@ -61,6 +61,17 @@ class TestDiskCheck(OdooHealthTestCommon):
         self.assertEqual(row.status, "critical")
         self.assertEqual(row.used_pct, 95.0)
 
+    def test_sample_disk_handles_large_byte_counts(self):
+        # Regression: fields.Integer overflowed at >2.1 GB (int4 ceiling).
+        # Use a 4 TB volume to ensure numeric storage holds it.
+        four_tb = 4 * 1024**4
+        with patch(MOCK_PATH, return_value=_usage(four_tb, four_tb // 2)):
+            row = self.Result._sample_disk("disk_root", "/")
+        self.assertEqual(row.total_bytes, float(four_tb))
+        self.assertEqual(row.free_bytes, float(four_tb // 2))
+        self.assertEqual(row.used_pct, 50.0)
+        self.assertEqual(row.status, "ok")
+
     def test_sample_disk_zero_total_does_not_divide_by_zero(self):
         with patch(MOCK_PATH, return_value=_usage(0, 0)):
             row = self.Result._sample_disk("disk_root", "/")
