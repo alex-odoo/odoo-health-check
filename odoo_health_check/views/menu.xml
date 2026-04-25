@@ -3,6 +3,7 @@
 
     <menuitem id="menu_root"
               name="Health Check"
+              web_icon="odoo_health_check,static/description/icon.png"
               sequence="100"/>
 
     <menuitem id="menu_dashboard"

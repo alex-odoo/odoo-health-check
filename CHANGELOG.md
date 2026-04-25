@@ -2,6 +2,20 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.2] - 2026-04-25
+
+### Added
+- `web_icon` on the top-level "Health Check" menu, pointing at
+  `static/description/icon.png` so the H+ monogram shows next to the
+  menu label in the Odoo navbar (replacing the default generic icon)
+- `static/description/index.html` (apps.odoo.com module page) with hero,
+  4 numbered features (each with a screenshot slot), configuration
+  block, technical details, "what it does NOT do" section, and support
+  links. Inline-styled to the Rteam brand palette
+- `README.rst` (module-level) mirroring index.html in restructured text
+  so the apps.odoo.com listing has both the rich HTML page and an RST
+  fallback
+
 ## [18.0.1.10.1] - 2026-04-25
 
 ### Added
