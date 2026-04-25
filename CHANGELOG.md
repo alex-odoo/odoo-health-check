@@ -2,6 +2,21 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.0] - 2026-04-25
+
+### Changed
+- Mail templates UX polish:
+  - **Severity badge** at the top of each alert email. `mail_template_cron_failure` always shows a red `CRITICAL` badge. `mail_template_disk_alert` shows a dynamic badge: amber `WARN` or red `CRITICAL` based on the row's status. PG monthly report stays badge-less (it's a digest, not an alert)
+  - **'View in Odoo' button** in every template, deep-linking via the appropriate act_window. Cron failure → "View in Cron History", disk alert → "View in Disk Checks", PG report → "View in PG Reports". Button color matches the severity badge for consistency
+  - **Traceback collapsed in `<details>`** in the cron failure email. Long stacks no longer dominate the inbox preview - the recipient sees the metadata (cron name, server, time, View button) immediately and expands the trace on demand. Email clients that don't support `<details>` (older mobile clients) gracefully render the trace inline
+- New helper methods for templates:
+  - `ir.cron.history._action_url()` returns the deep link
+  - `health.check.result._action_url()` returns the deep link, picking PG Reports vs Disk Checks action based on `check_type`
+  - Both fall back to the base URL if the action xml_id is missing (defensive)
+
+### Added
+- Tests for `_action_url()` on both models, including check_type-based action routing for `health.check.result`
+
 ## [18.0.1.9.0] - 2026-04-25
 
 ### Added

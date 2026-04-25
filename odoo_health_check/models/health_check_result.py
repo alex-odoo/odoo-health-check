@@ -420,3 +420,19 @@ class HealthCheckResult(models.Model):
     def _human_delta_bytes(self, n):
         """Template helper: signed byte delta -> '+1.2 GB'."""
         return _human_delta_bytes(n)
+
+    def _action_url(self):
+        """Deep link into this record's form view via the appropriate
+        act_window (Disk Checks for disk_*, PG Reports for pg_report).
+        Used by mail templates for a 'View in Odoo' button."""
+        self.ensure_one()
+        base = self.get_base_url()
+        xml_id = (
+            "odoo_health_check.health_check_pg_report_action"
+            if self.check_type == "pg_report"
+            else "odoo_health_check.health_check_result_action"
+        )
+        action = self.env.ref(xml_id, raise_if_not_found=False)
+        if not action:
+            return base
+        return "%s/odoo/action-%s/%s" % (base, action.id, self.id)

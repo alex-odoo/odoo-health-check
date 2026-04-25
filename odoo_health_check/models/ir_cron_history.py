@@ -90,3 +90,16 @@ class IrCronHistory(models.Model):
                 count, cutoff, retention,
             )
         return count
+
+    def _action_url(self):
+        """Deep link into this record's form view via the Cron History
+        act_window. Used by mail templates for a 'View in Odoo' button.
+        Falls back to the base URL if the action ref is missing."""
+        self.ensure_one()
+        base = self.get_base_url()
+        action = self.env.ref(
+            "odoo_health_check.ir_cron_history_action", raise_if_not_found=False,
+        )
+        if not action:
+            return base
+        return "%s/odoo/action-%s/%s" % (base, action.id, self.id)

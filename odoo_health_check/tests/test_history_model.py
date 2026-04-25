@@ -87,3 +87,11 @@ class TestCronHistoryModel(OdooHealthTestCommon):
         removed = self.History._odoo_health_cleanup()
 
         self.assertEqual(removed, 0)
+
+    def test_action_url_points_at_record_via_action(self):
+        cron = self._make_cron()
+        hist = self.History.create({"cron_id": cron.id})
+        url = hist._action_url()
+        action = self.env.ref("odoo_health_check.ir_cron_history_action")
+        self.assertIn("/odoo/action-%d/" % action.id, url)
+        self.assertTrue(url.endswith("/%d" % hist.id))
