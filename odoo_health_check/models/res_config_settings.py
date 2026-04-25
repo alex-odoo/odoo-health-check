@@ -17,3 +17,26 @@ class ResConfigSettings(models.TransientModel):
         help="Cron execution history rows older than this are deleted daily. "
              "Set to 0 or negative to disable cleanup.",
     )
+    odoo_health_disk_warn_pct = fields.Float(
+        string="Disk Warning Threshold (%)",
+        config_parameter="odoo_health_check.disk_warn_pct",
+        default=80.0,
+        digits=(5, 2),
+        help="Disk usage above this percentage marks the result as 'warn'. "
+             "Default: 80%. Must be lower than the critical threshold.",
+    )
+    odoo_health_disk_critical_pct = fields.Float(
+        string="Disk Critical Threshold (%)",
+        config_parameter="odoo_health_check.disk_critical_pct",
+        default=90.0,
+        digits=(5, 2),
+        help="Disk usage above this percentage marks the result as 'critical'. "
+             "Default: 90%. Must be higher than the warning threshold.",
+    )
+    odoo_health_disk_alert_emails = fields.Char(
+        string="Disk Alert Emails",
+        config_parameter="odoo_health_check.disk_alert_emails",
+        help="Comma-separated recipients that receive an email when disk usage "
+             "transitions from ok to warn or critical (or from warn to critical). "
+             "One email per worsening transition - no per-hour spam. Leave empty to disable.",
+    )

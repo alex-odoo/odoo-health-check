@@ -21,6 +21,20 @@
                             <field name="odoo_health_retention_days"/>
                         </setting>
                     </block>
+                    <block title="Disk Monitoring" name="health_check_disk">
+                        <setting id="health_check_disk_warn_pct" string="Warning Threshold (%)"
+                                 help="Disk usage above this percentage is flagged 'warn'. Default 80.">
+                            <field name="odoo_health_disk_warn_pct"/>
+                        </setting>
+                        <setting id="health_check_disk_critical_pct" string="Critical Threshold (%)"
+                                 help="Disk usage above this percentage is flagged 'critical'. Default 90.">
+                            <field name="odoo_health_disk_critical_pct"/>
+                        </setting>
+                        <setting id="health_check_disk_alert_emails" string="Disk Alert Emails"
+                                 help="Comma-separated recipients. One email per worsening transition (ok-&gt;warn, ok-&gt;critical, warn-&gt;critical). Leave empty to disable.">
+                            <field name="odoo_health_disk_alert_emails" placeholder="ops@example.com, sysadmin@example.com"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

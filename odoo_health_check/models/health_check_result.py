@@ -7,10 +7,11 @@ from odoo.tools import config
 
 _logger = logging.getLogger(__name__)
 
-# Phase 7 will replace these defaults with values read from
-# ir.config_parameter via res.config.settings.
 DEFAULT_WARN_PCT = 80.0
 DEFAULT_CRITICAL_PCT = 90.0
+
+# severity ordering for transition detection
+_SEVERITY = {"ok": 0, "warn": 1, "critical": 2}
 
 
 class HealthCheckResult(models.Model):
@@ -58,9 +59,39 @@ class HealthCheckResult(models.Model):
 
     @api.model
     def _disk_thresholds(self):
-        """Return (warn_pct, critical_pct). Phase 7 will override to read
-        configurable thresholds from ir.config_parameter."""
-        return (DEFAULT_WARN_PCT, DEFAULT_CRITICAL_PCT)
+        """Return (warn_pct, critical_pct) read from ir.config_parameter.
+
+        Falls back to defaults on missing or non-numeric values. Clamps
+        to [0, 100]. If the warn/critical invariant is violated
+        (critical < warn), reverts both to defaults and logs.
+        """
+        Params = self.env["ir.config_parameter"].sudo()
+        try:
+            warn = float(
+                Params.get_param(
+                    "odoo_health_check.disk_warn_pct", DEFAULT_WARN_PCT,
+                )
+            )
+        except (TypeError, ValueError):
+            warn = DEFAULT_WARN_PCT
+        try:
+            critical = float(
+                Params.get_param(
+                    "odoo_health_check.disk_critical_pct", DEFAULT_CRITICAL_PCT,
+                )
+            )
+        except (TypeError, ValueError):
+            critical = DEFAULT_CRITICAL_PCT
+        warn = max(0.0, min(100.0, warn))
+        critical = max(0.0, min(100.0, critical))
+        if critical < warn:
+            _logger.warning(
+                "odoo_health_check: disk thresholds invariant violated "
+                "(warn=%s critical=%s), falling back to defaults",
+                warn, critical,
+            )
+            return (DEFAULT_WARN_PCT, DEFAULT_CRITICAL_PCT)
+        return (warn, critical)
 
     @api.model
     def _classify_disk(self, used_pct):
@@ -126,4 +157,64 @@ class HealthCheckResult(models.Model):
                     {"error": str(exc), "type": type(exc).__name__}
                 ),
             }
-        return self.create(vals)
+        record = self.create(vals)
+        record._send_disk_alert()
+        return record
+
+    def _send_disk_alert(self):
+        """Enqueue a disk alert email if status worsened since last sample.
+
+        Sends only on transitions where severity strictly increased
+        (ok -> warn, ok -> critical, warn -> critical). 'error' rows
+        never trigger an alert and are skipped when looking up the
+        previous state, so a transient measurement failure between two
+        ok samples doesn't generate spurious alerts.
+
+        Wrapped in try/except: any failure is logged, never propagates.
+        Disabled when `odoo_health_check.disk_alert_emails` is empty.
+        """
+        self.ensure_one()
+        if self.status not in ("warn", "critical"):
+            return
+        try:
+            recipients = self._get_disk_alert_recipients()
+            if not recipients:
+                return
+            prev = self.search(
+                [
+                    ("check_type", "=", self.check_type),
+                    ("status", "!=", "error"),
+                    ("id", "!=", self.id),
+                ],
+                order="date desc, id desc",
+                limit=1,
+            )
+            prev_status = prev.status if prev else "ok"
+            if _SEVERITY[self.status] <= _SEVERITY[prev_status]:
+                return
+            template = self.env.ref(
+                "odoo_health_check.mail_template_disk_alert",
+                raise_if_not_found=False,
+            )
+            if not template:
+                _logger.warning(
+                    "odoo_health_check: disk alert template missing, skipping alert"
+                )
+                return
+            template.send_mail(
+                self.id,
+                force_send=False,
+                email_values={"email_to": ",".join(recipients)},
+            )
+        except Exception:
+            _logger.exception(
+                "odoo_health_check: failed to enqueue disk alert for result_id=%s",
+                self.id,
+            )
+
+    @api.model
+    def _get_disk_alert_recipients(self):
+        raw = self.env["ir.config_parameter"].sudo().get_param(
+            "odoo_health_check.disk_alert_emails", default="",
+        ) or ""
+        return [e.strip() for e in raw.split(",") if e.strip()]

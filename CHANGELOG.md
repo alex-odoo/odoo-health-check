@@ -2,6 +2,23 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.7.0] - 2026-04-25
+
+### Added
+- Configurable disk thresholds and disk-alert email (Phase 7)
+  - New settings (in Settings -> Health Check -> Disk Monitoring):
+    - `odoo_health_disk_warn_pct` (default 80) - usage % above which a sample is flagged 'warn'
+    - `odoo_health_disk_critical_pct` (default 90) - usage % above which a sample is flagged 'critical'
+    - `odoo_health_disk_alert_emails` - comma-separated recipients for disk alerts
+  - `_disk_thresholds()` now reads from `ir.config_parameter`. Falls back to defaults on missing or non-numeric values; clamps to [0, 100]; reverts to defaults if `critical < warn` (logs a warning)
+  - New mail template `mail_template_disk_alert` (subject: `[Odoo Health] Disk <status>: <mount> at X.X% used`, body: status, used%, total/free in GB, time)
+  - `_send_disk_alert()` enqueues an email only on worsening transitions (ok->warn, ok->critical, warn->critical). 'error' samples are skipped for both sending and previous-state lookup, so transient measurement failures don't generate spurious alerts. Improvements (critical->warn) and steady-state (warn->warn) never trigger an alert. One email per worsening transition - no per-hour spam
+  - Disk alert recipients are independent of cron-failure recipients (sysadmin vs engineering routing)
+- Tests (`tests/test_disk_alert.py`, 21 tests across 3 classes):
+  - Threshold reading: defaults, configured values, invalid fallback, out-of-range clamp, invariant violation, classification with custom thresholds
+  - Alert transitions: first-run warn / critical, warn->critical, warn->warn (no), critical->critical (no), critical->warn (no), ok (no), error (no), empty recipients (no), error-row skipped in lookup, isolation per check_type, comma-trim
+  - Settings: roundtrip for warn_pct / critical_pct / alert_emails, disk alert template registered
+
 ## [18.0.1.6.1] - 2026-04-25
 
 ### Fixed

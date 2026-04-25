@@ -26,4 +26,31 @@
         <field name="auto_delete" eval="True"/>
     </record>
 
+    <record id="mail_template_disk_alert" model="mail.template">
+        <field name="name">Odoo Health Check: Disk Alert</field>
+        <field name="model_id" ref="model_health_check_result"/>
+        <field name="subject">[Odoo Health] Disk {{ object.status }}: {{ object.mount_path }} at {{ '%.1f' % (object.used_pct or 0) }}% used</field>
+        <field name="email_from">{{ (object.env.company.email or user.email_formatted) }}</field>
+        <field name="body_html" type="html">
+            <div style="font-family:Arial,sans-serif;font-size:14px;color:#333">
+                <p>Disk usage on <strong t-out="object.mount_path"/> has reached
+                   <strong t-out="object.status"/>:
+                   <strong t-out="'%.1f' % (object.used_pct or 0)"/>% used.</p>
+                <table style="border-collapse:collapse;margin:12px 0">
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Check</td><td t-out="object.check_type"/></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Mount</td><td><strong t-out="object.mount_path"/></td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Status</td><td t-out="object.status"/></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Used</td><td><t t-out="'%.2f' % (object.used_pct or 0)"/>%</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Total</td><td><t t-out="'%.2f' % ((object.total_bytes or 0) / (1024.0 ** 3))"/> GB</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Free</td><td><t t-out="'%.2f' % ((object.free_bytes or 0) / (1024.0 ** 3))"/> GB</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;color:#666">Time</td><td t-out="object.date"/></tr>
+                </table>
+                <p style="margin-top:18px;color:#888;font-size:12px">
+                    One alert per worsening transition. Manage thresholds and recipients in Settings -&gt; Health Check.
+                </p>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
 </odoo>

@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.6.1",
+    "version": "18.0.1.7.0",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
