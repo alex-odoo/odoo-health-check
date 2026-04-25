@@ -2,6 +2,35 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.3] - 2026-04-25
+
+### Added
+- 9 real screenshots in `static/description/screenshots/` captured from a
+  live test18 install:
+  - `01_dashboard.png` - Dashboard with 4 populated tiles (cron health,
+    OS root, filestore, latest PG report)
+  - `02_cron_history.png` - Cron History list with mixed Success / Failed
+    badges across multiple scheduled actions
+  - `03_disk_checks.png` - Disk Checks list showing OK + Warning +
+    Critical status badges across both check types
+  - `04_pg_reports.png` - PG Reports list with multiple monthly reports
+  - `05_settings.png` - Settings page with all four blocks
+  - `06_email_inbox.png` - Inbox view of all four alert types side by side
+  - `07_email_disk_alert.png` - full disk alert email body (severity
+    badge, metadata table, View in Disk Checks button)
+  - `08_email_pg_report.png` - full monthly PG digest email body (top
+    tables with Δ size + Δ rows columns, View in PG Reports button)
+  - `09_email_cron_failure.png` - full cron failure email body
+    (CRITICAL badge, metadata table, View in Cron History button,
+    collapsed traceback)
+- New "Alerts in your inbox" section in `index.html` showcasing the
+  inbox view (full width) and three example email bodies in a 3-column
+  grid below it
+
+### Changed
+- `index.html` now references the real screenshots in every feature
+  block; the apps.odoo.com listing page is fully populated end-to-end
+
 ## [18.0.1.10.2] - 2026-04-25
 
 ### Added
@@ -48,7 +77,7 @@ All notable changes to this module are documented here. Format follows [Keep a C
 
 ### Added
 - Health Check Dashboard (Phase 9)
-  - New `health.check.dashboard` TransientModel — at-a-glance summary of cron health, disk usage, and the latest PostgreSQL growth report
+  - New `health.check.dashboard` TransientModel - at-a-glance summary of cron health, disk usage, and the latest PostgreSQL growth report
   - 4 tiles in a single form view:
     - **Cron health** - failed crons in last 24h / 7d, total cron runs in 7d
     - **OS root** - status badge (ok / warn / critical / error / unknown), used %, free / total in GB, last sample timestamp
@@ -97,7 +126,7 @@ All notable changes to this module are documented here. Format follows [Keep a C
   which maps to PostgreSQL `int4` (~2.1 GB ceiling). Any realistic volume
   triggered `psycopg2.errors.NumericValueOutOfRange` on insert. Switched
   both to `fields.Float(digits=(20, 0))` (numeric(20,0)). Caught live on
-  test18 — first cron run after install raised on disk total ~50 GB
+  test18 - first cron run after install raised on disk total ~50 GB
 - Added regression test `test_sample_disk_handles_large_byte_counts`
   (4 TB volume) to prevent reintroduction
 

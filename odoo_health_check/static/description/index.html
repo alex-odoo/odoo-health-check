@@ -111,7 +111,7 @@
 
   <div class="oe_row oe_spaced">
     <div class="oe_span6">
-      <img src="screenshots/04_pg_report.png" alt="Monthly PostgreSQL growth report"
+      <img src="screenshots/04_pg_reports.png" alt="Monthly PostgreSQL growth report list"
            style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
     </div>
     <div class="oe_span6">
@@ -137,6 +137,43 @@
 
 <section class="oe_container oe_dark">
   <div class="oe_row oe_spaced">
+    <div class="oe_span12" style="text-align:center;">
+      <h2 style="color:#0A1628;font-weight:700;">Alerts in your inbox</h2>
+      <p style="font-size:15px;line-height:1.6;color:#333;max-width:780px;margin:0 auto 24px;">
+        Each alert email opens with a colour-coded severity badge, the key
+        metadata in a tight table, and a one-click button that deep-links into
+        the corresponding record in Odoo. Long content (like a Python traceback)
+        is collapsed inside a <code>&lt;details&gt;</code> block so the inbox
+        preview stays readable.
+      </p>
+    </div>
+    <div class="oe_span12" style="text-align:center;">
+      <img src="screenshots/06_email_inbox.png" alt="Inbox showing four alert types from Odoo Health Check"
+           style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;margin-bottom:18px;"/>
+    </div>
+  </div>
+
+  <div class="oe_row oe_spaced">
+    <div class="oe_span4" style="text-align:center;">
+      <img src="screenshots/09_email_cron_failure.png" alt="Cron failure email with CRITICAL badge and collapsed traceback"
+           style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
+      <p style="font-size:13px;color:#666;margin-top:8px;"><strong>Cron failure</strong> - red CRITICAL badge, metadata table, View in Cron History button, traceback under a "Show full error traceback" toggle</p>
+    </div>
+    <div class="oe_span4" style="text-align:center;">
+      <img src="screenshots/07_email_disk_alert.png" alt="Disk alert email with severity badge and View button"
+           style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
+      <p style="font-size:13px;color:#666;margin-top:8px;"><strong>Disk alert</strong> - amber WARNING or red CRITICAL badge depending on threshold crossed, mount + used % + total/free in GB, View in Disk Checks button</p>
+    </div>
+    <div class="oe_span4" style="text-align:center;">
+      <img src="screenshots/08_email_pg_report.png" alt="Monthly PostgreSQL growth report email with top tables"
+           style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
+      <p style="font-size:13px;color:#666;margin-top:8px;"><strong>PG monthly digest</strong> - top-10 tables with size, Δ size, rows, Δ rows columns; total DB size delta vs the previous report; View in PG Reports button</p>
+    </div>
+  </div>
+</section>
+
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
     <div class="oe_span12">
       <h2 style="color:#0A1628;font-weight:700;">Configuration</h2>
       <p style="font-size:15px;line-height:1.6;color:#333;max-width:780px;">
@@ -153,14 +190,14 @@
         <li><strong>PG Report Emails</strong> - recipients for the monthly PostgreSQL growth digest</li>
       </ul>
     </div>
-    <div class="oe_span12" style="margin-top:18px;">
-      <img src="screenshots/05_settings.png" alt="Health Check Settings page"
+    <div class="oe_span12" style="margin-top:18px;text-align:center;">
+      <img src="screenshots/05_settings.png" alt="Health Check Settings page with all four blocks"
            style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
     </div>
   </div>
 </section>
 
-<section class="oe_container">
+<section class="oe_container oe_dark">
   <div class="oe_row oe_spaced">
     <div class="oe_span12">
       <h2 style="color:#0A1628;font-weight:700;">Technical details</h2>
@@ -180,7 +217,7 @@
   </div>
 </section>
 
-<section class="oe_container oe_dark">
+<section class="oe_container">
   <div class="oe_row oe_spaced">
     <div class="oe_span12">
       <h2 style="color:#0A1628;font-weight:700;">What this module does <em>not</em> do</h2>
@@ -198,7 +235,7 @@
   </div>
 </section>
 
-<section class="oe_container">
+<section class="oe_container oe_dark">
   <div class="oe_row oe_spaced">
     <div class="oe_span12" style="text-align:center;">
       <h2 style="color:#0A1628;font-weight:700;">Support</h2>
