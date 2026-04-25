@@ -2,6 +2,19 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.1] - 2026-04-25
+
+### Added
+- Store assets for apps.odoo.com listing (Phase 11, partial):
+  - `static/description/icon.png` (128x128) - "H+" monogram in the Rteam family LETTER+ pattern: solid white H, teal #00D4AA `+` at the upper-left, navy #0A1628 background, subtle violet→teal aura. Generated via Gemini 3 Pro Image (nano banana pro) at 2048x2048 then downscaled
+  - `static/description/banner.png` (1120x560, 2:1) - hero composition: H+ monogram + "Odoo Health Check" + tagline "Catch failures before your users do" on the left, four glassmorphism feature tiles on the right (CRON / DISK / GROWTH / DASHBOARD). Generated at 2752x1536, center-cropped to 2:1 ratio, downscaled
+  - Both assets follow Rteam Brand Kit (#0A1628 navy + #00D4AA teal + #7C5CFC violet aura, max 3 colors + white text, no AI cliches, no third-party logos)
+- `static/description/screenshots/` directory created for the 3-5 UI captures coming next (dashboard / cron history / disk checks / settings)
+
+### Notes
+- Phase 11 still has remaining work: real screenshots from test18, `static/description/index.html`, and `README.rst`
+- No functional code change in this release - assets only
+
 ## [18.0.1.10.0] - 2026-04-25
 
 ### Changed
