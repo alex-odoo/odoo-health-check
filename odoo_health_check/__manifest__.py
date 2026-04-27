@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.10.10",
+    "version": "18.0.1.10.11",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
@@ -33,6 +33,11 @@ Targeted at Odoo 18 Enterprise. Community may work but is not tested.
         "views/res_config_settings_views.xml",
         "views/menu.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "odoo_health_check/static/src/scss/dark_mode_icon.scss",
+        ],
+    },
     "installable": True,
     "application": False,
     "auto_install": False,

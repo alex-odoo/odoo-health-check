@@ -2,6 +2,18 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.11] - 2026-04-27
+
+### Added
+- Dark mode icon variant `static/description/icon_dark.png` (white H+ on
+  navy with violet/teal aura - the canonical Rteam LETTER+ monogram per
+  Constitution §7). Manifest `icon.png` stays as the LIGHT Flat variant
+  used by light theme + apps.odoo.com listing cover.
+- SCSS asset (`web.assets_backend`) overriding the apps drawer icon for
+  the Health Check tile when the user has dark mode enabled
+  (`body.o_dark_mode`). The menu icon now stays native to whichever
+  theme the user has on: light theme shows LIGHT, dark theme shows DARK.
+
 ## [18.0.1.10.5] - 2026-04-25
 
 ### Fixed
