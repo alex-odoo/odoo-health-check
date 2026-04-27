@@ -2,6 +2,21 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.13] - 2026-04-27
+
+### Fixed
+- Dark-mode icon swap finally lands. Odoo 18 Enterprise does not put
+  a `.o_dark_mode` class on body when dark color scheme is active -
+  it loads a separate `web.assets_web_dark` asset bundle instead.
+  The 1.10.11 SCSS targeted `.o_dark_mode` and never matched, so the
+  apps drawer Health Check tile stayed on the LIGHT icon in dark mode.
+- Moved `dark_mode_icon.scss` from `web.assets_backend` (always loaded)
+  to `web.assets_web_dark` (loaded only in dark mode). Selector now
+  targets the actual DOM seen on test18:
+  `.o_app[data-menu-xmlid="odoo_health_check.menu_root"] img.o_app_icon`
+  with `content: url(...) !important` to replace the embedded base64
+  image. No `.o_dark_mode` wrapper - bundle gating is the gate.
+
 ## [18.0.1.10.12] - 2026-04-27
 
 ### Fixed
