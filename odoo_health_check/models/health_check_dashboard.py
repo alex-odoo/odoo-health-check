@@ -15,6 +15,9 @@ class HealthCheckDashboard(models.TransientModel):
 
     _name = "health.check.dashboard"
     _description = "Odoo Health Check Dashboard"
+    _rec_name = "name"
+
+    name = fields.Char(default="Dashboard", readonly=True)
 
     failures_24h = fields.Integer(string="Cron failures (24h)", readonly=True)
     failures_7d = fields.Integer(string="Cron failures (7d)", readonly=True)
@@ -90,14 +93,14 @@ class HealthCheckDashboard(models.TransientModel):
             return {
                 f"{prefix}_status": "unknown",
                 f"{prefix}_used_pct": 0.0,
-                f"{prefix}_summary": "No samples yet — the hourly disk cron will populate this.",
+                f"{prefix}_summary": "No samples yet - the hourly disk cron will populate this.",
                 f"{prefix}_at": False,
             }
         if row.status == "error":
             return {
                 f"{prefix}_status": "error",
                 f"{prefix}_used_pct": 0.0,
-                f"{prefix}_summary": (row.mount_path or "") + " — last sample raised an error",
+                f"{prefix}_summary": (row.mount_path or "") + " - last sample raised an error",
                 f"{prefix}_at": row.date,
             }
         return {
@@ -140,18 +143,35 @@ class HealthCheckDashboard(models.TransientModel):
                 else "First report (no previous to compare)."
             ),
             "last_pg_report_table": (
-                f"{top['name']} — {_human_bytes(top.get('total_bytes', 0))}"
+                f"{top['name']} - {_human_bytes(top.get('total_bytes', 0))}"
                 if top
                 else ""
             ),
         }
 
+    @api.model
+    def action_open(self):
+        """Server-action entry point. Create a fresh transient record so
+        the form opens on a real id (URL has no '/new' segment) and the
+        breadcrumb shows the record name instead of 'New'."""
+        rec = self.create({})
+        return self._dashboard_action(rec.id)
+
     def action_refresh(self):
-        """Re-open the dashboard so default_get fires with fresh data."""
+        """Re-open the dashboard with a fresh snapshot."""
+        rec = self.create({})
+        return self._dashboard_action(rec.id)
+
+    @api.model
+    def _dashboard_action(self, res_id):
         return {
             "type": "ir.actions.act_window",
             "res_model": self._name,
             "view_mode": "form",
+            "view_id": self.env.ref(
+                "odoo_health_check.health_check_dashboard_view_form"
+            ).id,
+            "res_id": res_id,
             "target": "current",
             "name": "Health Check Dashboard",
         }
