@@ -2,6 +2,24 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.14] - 2026-04-27
+
+### Fixed
+- Upgrade from <=1.10.8 to any later version failed with
+  `ParseError: For external id odoo_health_check.health_check_dashboard_action
+   when trying to create/update a record of model ir.actions.server
+   found record of different model ir.actions.act_window`.
+  In 1.10.9 the dashboard action XML record changed from
+  `ir.actions.act_window` to `ir.actions.server` (to drop the "New"
+  breadcrumb on menu open). Odoo refuses to overwrite an existing
+  external id if the target model differs, so every build 1.10.9 - 1.10.13
+  was dropped on Odoo.sh because the production DB still held the
+  1.10.8 act_window record under that xmlid.
+- Added `migrations/18.0.1.10.9/pre-migration.py` that drops the stale
+  act_window record (and its ir_model_data row) before the XML data
+  load runs. Menu items reference the action by xmlid, so they rebind
+  cleanly to the recreated server action.
+
 ## [18.0.1.10.13] - 2026-04-27
 
 ### Fixed
