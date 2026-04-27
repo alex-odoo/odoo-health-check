@@ -2,6 +2,24 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.10.12] - 2026-04-27
+
+### Fixed
+- `ir.cron._callback` override broke after Odoo 18 dropped the third
+  positional `job_id` arg mid-version (new signature is
+  `_callback(self, cron_name, server_action_id)` with `self.ensure_one()`).
+  Override now uses `*extra` to forward any legacy third arg through to
+  super, so the module works on installs that pulled the new 18.0 stable
+  AND on installs still on the older signature. cron_id for history
+  logging derives from `self.id` (the cron singleton).
+- Test suite: 7 call sites in `test_cron_override.py` and
+  `test_failure_email.py` updated from `self.Cron._callback(name, sa, id)`
+  to `cron._callback(name, sa)` on the cron singleton, matching the new
+  upstream signature.
+- `TestPgReportRun.setUp` now wipes pre-existing `pg_report` rows so
+  "first run" assertions are deterministic against dev DBs where the
+  monthly cron may have fired for real before the test executes.
+
 ## [18.0.1.10.11] - 2026-04-27
 
 ### Added

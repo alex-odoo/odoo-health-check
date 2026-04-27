@@ -10,11 +10,17 @@ _logger = logging.getLogger(__name__)
 class IrCron(models.Model):
     _inherit = "ir.cron"
 
-    def _callback(self, cron_name, server_action_id, job_id):
-        history_id = self._odoo_health_log_start(job_id)
+    def _callback(self, cron_name, server_action_id, *extra):
+        # Odoo 18 dropped the third positional `job_id` arg mid-version
+        # (new signature: `_callback(self, cron_name, server_action_id)`,
+        # self is a singleton via ensure_one). The *extra accepts and
+        # forwards any legacy third arg so installs still on an older 18.0
+        # build don't break.
+        cron_id = self.id if len(self) == 1 else (extra[0] if extra else None)
+        history_id = self._odoo_health_log_start(cron_id)
         t0 = time.perf_counter()
         try:
-            result = super()._callback(cron_name, server_action_id, job_id)
+            result = super()._callback(cron_name, server_action_id, *extra)
         except Exception:
             self._odoo_health_log_end(
                 history_id, "failed", time.perf_counter() - t0, traceback.format_exc(),

@@ -63,6 +63,13 @@ class TestPgReportRun(OdooHealthTestCommon):
         cls.Result = cls.env["health.check.result"]
         cls.Mail = cls.env["mail.mail"]
 
+    def setUp(self):
+        super().setUp()
+        # Wipe pg_report rows so 'first run' assertions stay deterministic
+        # against dev DBs where the monthly cron may have fired for real.
+        # The unlink rides the test savepoint and rolls back at test end.
+        self.Result.search([("check_type", "=", "pg_report")]).unlink()
+
     def _set_recipients(self, value):
         self.Params.set_param("odoo_health_check.pg_report_emails", value)
 
