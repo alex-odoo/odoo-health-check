@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="0">
-
+    <!-- TODO: difficult to understand the code need to make classes instead duplicated styles-->
     <record id="mail_template_cron_failure" model="mail.template">
         <field name="name">Odoo Health Check: Cron Failure</field>
         <field name="model_id" ref="model_ir_cron_history"/>

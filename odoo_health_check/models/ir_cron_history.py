@@ -27,6 +27,7 @@ class IrCronHistory(models.Model):
         index=True,
     )
     date_end = fields.Datetime(string="Ended")
+    # TODO: should be computed date_end - date_start
     duration_sec = fields.Float(
         string="Duration (s)",
         digits=(12, 3),
@@ -58,6 +59,7 @@ class IrCronHistory(models.Model):
         ),
     ]
 
+    # TODO: no need to return values from cron function
     @api.model
     def _odoo_health_cleanup(self, batch_size=5000):
         """Delete history rows older than the configured retention window.
@@ -68,6 +70,7 @@ class IrCronHistory(models.Model):
         param = self.env["ir.config_parameter"].sudo().get_param(
             "odoo_health_check.retention_days", default="30",
         )
+        # TODO: no need to use try/except need to use isalnum
         try:
             retention = int(param)
         except (TypeError, ValueError):

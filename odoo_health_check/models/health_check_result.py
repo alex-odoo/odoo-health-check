@@ -106,6 +106,8 @@ class HealthCheckResult(models.Model):
         (critical < warn), reverts both to defaults and logs.
         """
         Params = self.env["ir.config_parameter"].sudo()
+
+        # TODO: reduce try/except number to 1
         try:
             warn = float(
                 Params.get_param(
@@ -165,6 +167,7 @@ class HealthCheckResult(models.Model):
         recordset of created rows. Never raises - any failure is captured
         as a row with status='error' so the cron itself stays green.
         """
+        # TODO: no need to use self.browse and records |=, no need to return values from cron
         records = self.browse()
         for check_type, path in self._disk_targets():
             records |= self._sample_disk(check_type, path)
@@ -216,6 +219,7 @@ class HealthCheckResult(models.Model):
         self.ensure_one()
         if self.status not in ("warn", "critical"):
             return
+        # TODO: no need of try/except for this code
         try:
             recipients = self._get_disk_alert_recipients()
             if not recipients:
@@ -269,6 +273,7 @@ class HealthCheckResult(models.Model):
         for the top-N tables by total relation size, excluding system
         schemas. Uses pg_class.reltuples (estimate) for row count."""
         self.env.cr.execute(_PG_TOP_TABLES_SQL, (limit,))
+        # TODO: better - name,total_bytes, table_bytes, row_estimate in self.env.cr.fetchall()
         return [
             {
                 "name": row[0],
@@ -285,6 +290,7 @@ class HealthCheckResult(models.Model):
         self.env.cr.execute("SELECT pg_database_size(current_database())::bigint")
         return int(self.env.cr.fetchone()[0] or 0)
 
+    # TODO: no need to make new function for search
     def _previous_pg_report(self):
         """Most recent prior pg_report row with status='ok', or empty
         recordset if none exists."""
@@ -432,6 +438,7 @@ class HealthCheckResult(models.Model):
             if self.check_type == "pg_report"
             else "odoo_health_check.health_check_result_action"
         )
+        # TODO: delete raise_if_not_found - better to know that action is missing or add logger
         action = self.env.ref(xml_id, raise_if_not_found=False)
         if not action:
             return base
