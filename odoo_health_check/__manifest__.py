@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.10.14",
+    "version": "18.0.1.11.0",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
@@ -27,6 +27,7 @@ Targeted at Odoo 18 Enterprise. Community may work but is not tested.
         "security/ir.model.access.csv",
         "data/mail_template_data.xml",
         "data/ir_cron_data.xml",
+        "data/health_check_dashboard_data.xml",
         "views/ir_cron_history_views.xml",
         "views/health_check_result_views.xml",
         "views/health_check_dashboard_views.xml",

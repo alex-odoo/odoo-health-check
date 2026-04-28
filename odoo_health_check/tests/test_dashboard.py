@@ -142,15 +142,23 @@ class TestDashboard(OdooHealthTestCommon):
         snap = self.Dashboard._compute_dashboard_snapshot()
         self.assertIn("First report", snap["last_pg_report_db_delta"])
 
-    def test_default_get_creates_record_with_snapshot(self):
+    def test_singleton_record_exposes_fresh_computed_snapshot(self):
         self._seed_disk("disk_root", "warn", used_pct=85.0)
-        # default_get is called automatically when creating with empty vals
-        rec = self.Dashboard.create({})
+        rec = self.Dashboard._get_singleton()
+        rec.invalidate_recordset()
         self.assertEqual(rec.disk_root_status, "warn")
         self.assertEqual(rec.disk_root_used_pct, 85.0)
 
-    def test_action_refresh_returns_window_action(self):
-        rec = self.Dashboard.create({})
-        action = rec.action_refresh()
+    def test_action_refresh_reuses_singleton_no_record_churn(self):
+        before_count = self.Dashboard.search_count([])
+        action = self.Dashboard.action_refresh()
+        self.Dashboard.action_refresh()
         self.assertEqual(action["type"], "ir.actions.act_window")
         self.assertEqual(action["res_model"], "health.check.dashboard")
+        self.assertEqual(self.Dashboard.search_count([]), before_count,
+                         "refresh must not create new dashboard rows")
+
+    def test_action_open_returns_singleton_id(self):
+        action = self.Dashboard.action_open()
+        singleton = self.Dashboard._get_singleton()
+        self.assertEqual(action["res_id"], singleton.id)

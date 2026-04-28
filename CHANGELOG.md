@@ -2,6 +2,74 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.11.0] - 2026-04-29
+
+### Changed
+- Cron methods renamed to the Odoo `_cron_<verb>` convention:
+  `_odoo_health_cleanup` -> `_cron_cleanup_history`,
+  `_run_disk_checks` -> `_cron_check_disk`,
+  `_run_pg_report` -> `_cron_pg_report`. ir.cron records updated.
+- `ir.cron.history.duration_sec` is now a stored compute over
+  `(date_end - date_start)` instead of a `time.perf_counter()` measurement
+  passed in by the `_callback` override. Drops the perf_counter dance and
+  the explicit `duration_sec` arg on `_odoo_health_log_end`.
+- `health.check.dashboard` reworked from `models.TransientModel` to
+  `models.Model` with `compute=, store=False` data fields and a
+  singleton record (xmlid `odoo_health_check.dashboard_singleton`,
+  created from data XML). Opening the dashboard or clicking Refresh
+  reuses the same row instead of creating a fresh transient on every
+  click; computes fire on each form-view read so data stays current.
+- Mail templates extracted repeated inline-style strings into `t-set`
+  vars (`badge_style` / `button_style` / `kv_label` / `footer_style`).
+  Email clients still see fully inlined styles after QWeb render -
+  `<style>` blocks would have been stripped by Gmail / Outlook / mobile.
+- `_disk_thresholds` collapsed three try/except blocks into a single
+  `_get_float_param(key, default)` helper.
+- `_cron_check_disk` no longer aggregates results via `records |=`;
+  it just iterates the targets and lets `_sample_disk` create rows.
+- `_pg_top_tables` uses tuple unpacking on `cr.fetchall()` rows instead
+  of positional indexing.
+- `_previous_pg_report` inlined into its single caller (`_cron_pg_report`).
+- `_action_url` helpers log a warning when `env.ref(...)` returns None
+  before falling back to the base URL.
+- Try/except blocks in `_odoo_health_send_failure_email`,
+  `_send_disk_alert`, `_send_pg_report_email` narrowed to wrap only the
+  actual `template.send_mail` call. The pre-checks (recipient list,
+  template lookup) now propagate normally; only a flaky mail server
+  is absorbed.
+
+### Push-back items kept (with rationale)
+- The `*extra` arg on `_callback` and the forwarding to `super()` are
+  retained: the Odoo 18 stable branch dropped the third positional
+  `job_id` arg mid-version (between 1.10.7 and 1.10.9 builds) and the
+  forward absorbs that signature drift. Removing it would re-break
+  installs on older 18.0 builds.
+- `migrations/18.0.1.10.9/pre-migration.py` stays. apps.odoo.com ships
+  every release as an in-place upgrade, and DBs upgrading from
+  1.10.8-era will fail without it (xmlid model collision on
+  `health_check_dashboard_action`). Docstring on the file explains.
+- `int(retention) + try/except` kept as the idiomatic Python int parse;
+  `str.isalnum()` would accept "1a" and reject negative values.
+
+### Migration
+- `migrations/18.0.1.11.0/pre-migration.py` deletes leftover transient
+  rows from the old `health.check.dashboard` table so the singleton
+  record from data XML loads cleanly.
+
+### Tests
+- Updated for the cron rename and `_cron_check_disk` no-return signature.
+- Added `test_duration_sec_computed_from_dates` covering the new
+  computed field.
+- `test_default_get_creates_record_with_snapshot` replaced by
+  `test_singleton_record_exposes_fresh_computed_snapshot`,
+  `test_action_refresh_reuses_singleton_no_record_churn`,
+  `test_action_open_returns_singleton_id`.
+
+### Tooling
+- Added `pyproject.toml` with `line-length=100`, `target-version=py310`,
+  and per-file F401 / B018 ignores so future contributors hit a
+  consistent baseline.
+
 ## [18.0.1.10.14] - 2026-04-27
 
 ### Fixed

@@ -89,9 +89,11 @@ class TestDiskCheck(OdooHealthTestCommon):
         self.assertEqual(details["type"], "OSError")
         self.assertIn("permission denied", details["error"])
 
-    def test_run_disk_checks_creates_one_row_per_target(self):
+    def test_cron_check_disk_creates_one_row_per_target(self):
+        before_ids = self.Result.search([]).ids
         with patch(MOCK_PATH, return_value=_usage(1000, 100)):
-            rows = self.Result._run_disk_checks()
+            self.Result._cron_check_disk()
+        rows = self.Result.search([("id", "not in", before_ids)])
         self.assertEqual(len(rows), 2)
         types = sorted(rows.mapped("check_type"))
         self.assertEqual(types, ["disk_filestore", "disk_root"])
@@ -99,7 +101,7 @@ class TestDiskCheck(OdooHealthTestCommon):
             self.assertEqual(row.status, "ok")
             self.assertEqual(row.used_pct, 10.0)
 
-    def test_run_disk_checks_isolates_failures_per_target(self):
+    def test_cron_check_disk_isolates_failures_per_target(self):
         # First call (disk_root) succeeds, second (disk_filestore) raises.
         side = [_usage(1000, 200), OSError("filestore unreachable")]
 
@@ -109,9 +111,11 @@ class TestDiskCheck(OdooHealthTestCommon):
                 raise v
             return v
 
+        before_ids = self.Result.search([]).ids
         with patch(MOCK_PATH, side_effect=fake), \
              mute_logger("odoo.addons.odoo_health_check.models.health_check_result"):
-            rows = self.Result._run_disk_checks()
+            self.Result._cron_check_disk()
+        rows = self.Result.search([("id", "not in", before_ids)])
 
         by_type = {r.check_type: r for r in rows}
         self.assertEqual(by_type["disk_root"].status, "ok")
@@ -126,7 +130,7 @@ class TestDiskCheck(OdooHealthTestCommon):
         self.assertTrue(cron.active)
         self.assertEqual(cron.interval_type, "hours")
         self.assertEqual(cron.interval_number, 1)
-        self.assertIn("_run_disk_checks", cron.code)
+        self.assertIn("_cron_check_disk", cron.code)
 
     def test_action_url_for_disk_uses_disk_action(self):
         with patch(MOCK_PATH, return_value=_usage(1000, 500)):

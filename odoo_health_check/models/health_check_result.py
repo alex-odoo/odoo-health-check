@@ -98,32 +98,28 @@ class HealthCheckResult(models.Model):
     )
 
     @api.model
-    def _disk_thresholds(self):
-        """Return (warn_pct, critical_pct) read from ir.config_parameter.
-
-        Falls back to defaults on missing or non-numeric values. Clamps
-        to [0, 100]. If the warn/critical invariant is violated
-        (critical < warn), reverts both to defaults and logs.
+    def _get_float_param(self, key, default):
+        """Read a float ir.config_parameter, falling back to default on
+        missing or non-numeric values. Defaults are baked into the source
+        rather than relying on res_config_settings so a fresh install
+        without saved settings still has sane thresholds.
         """
-        Params = self.env["ir.config_parameter"].sudo()
+        raw = self.env["ir.config_parameter"].sudo().get_param(key, default)
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return default
 
-        # TODO: reduce try/except number to 1
-        try:
-            warn = float(
-                Params.get_param(
-                    "odoo_health_check.disk_warn_pct", DEFAULT_WARN_PCT,
-                )
-            )
-        except (TypeError, ValueError):
-            warn = DEFAULT_WARN_PCT
-        try:
-            critical = float(
-                Params.get_param(
-                    "odoo_health_check.disk_critical_pct", DEFAULT_CRITICAL_PCT,
-                )
-            )
-        except (TypeError, ValueError):
-            critical = DEFAULT_CRITICAL_PCT
+    @api.model
+    def _disk_thresholds(self):
+        """Return (warn_pct, critical_pct) clamped to [0, 100]. If the
+        warn/critical invariant is violated (critical < warn), reverts
+        both to defaults and logs.
+        """
+        warn = self._get_float_param("odoo_health_check.disk_warn_pct", DEFAULT_WARN_PCT)
+        critical = self._get_float_param(
+            "odoo_health_check.disk_critical_pct", DEFAULT_CRITICAL_PCT
+        )
         warn = max(0.0, min(100.0, warn))
         critical = max(0.0, min(100.0, critical))
         if critical < warn:
@@ -160,18 +156,15 @@ class HealthCheckResult(models.Model):
         ]
 
     @api.model
-    def _run_disk_checks(self):
+    def _cron_check_disk(self):
         """Sample disk usage on OS root and Odoo filestore mount.
 
-        Creates one health.check.result row per check_type. Returns the
-        recordset of created rows. Never raises - any failure is captured
-        as a row with status='error' so the cron itself stays green.
+        Creates one health.check.result row per check_type. Never raises -
+        any sampling failure is captured as a row with status='error' so
+        the cron itself stays green.
         """
-        # TODO: no need to use self.browse and records |=, no need to return values from cron
-        records = self.browse()
         for check_type, path in self._disk_targets():
-            records |= self._sample_disk(check_type, path)
-        return records
+            self._sample_disk(check_type, path)
 
     @api.model
     def _sample_disk(self, check_type, path):
@@ -213,38 +206,38 @@ class HealthCheckResult(models.Model):
         previous state, so a transient measurement failure between two
         ok samples doesn't generate spurious alerts.
 
-        Wrapped in try/except: any failure is logged, never propagates.
         Disabled when `odoo_health_check.disk_alert_emails` is empty.
         """
         self.ensure_one()
         if self.status not in ("warn", "critical"):
             return
-        # TODO: no need of try/except for this code
+        recipients = self._get_disk_alert_recipients()
+        if not recipients:
+            return
+        prev = self.search(
+            [
+                ("check_type", "=", self.check_type),
+                ("status", "!=", "error"),
+                ("id", "!=", self.id),
+            ],
+            order="date desc, id desc",
+            limit=1,
+        )
+        prev_status = prev.status if prev else "ok"
+        if _SEVERITY[self.status] <= _SEVERITY[prev_status]:
+            return
+        template = self.env.ref(
+            "odoo_health_check.mail_template_disk_alert",
+            raise_if_not_found=False,
+        )
+        if not template:
+            _logger.warning(
+                "odoo_health_check: disk alert template missing, skipping alert"
+            )
+            return
+        # Narrow try/except: only the actual mail enqueue needs guarding.
+        # A flaky mail server must not abort the disk check row write.
         try:
-            recipients = self._get_disk_alert_recipients()
-            if not recipients:
-                return
-            prev = self.search(
-                [
-                    ("check_type", "=", self.check_type),
-                    ("status", "!=", "error"),
-                    ("id", "!=", self.id),
-                ],
-                order="date desc, id desc",
-                limit=1,
-            )
-            prev_status = prev.status if prev else "ok"
-            if _SEVERITY[self.status] <= _SEVERITY[prev_status]:
-                return
-            template = self.env.ref(
-                "odoo_health_check.mail_template_disk_alert",
-                raise_if_not_found=False,
-            )
-            if not template:
-                _logger.warning(
-                    "odoo_health_check: disk alert template missing, skipping alert"
-                )
-                return
             template.send_mail(
                 self.id,
                 force_send=False,
@@ -273,15 +266,14 @@ class HealthCheckResult(models.Model):
         for the top-N tables by total relation size, excluding system
         schemas. Uses pg_class.reltuples (estimate) for row count."""
         self.env.cr.execute(_PG_TOP_TABLES_SQL, (limit,))
-        # TODO: better - name,total_bytes, table_bytes, row_estimate in self.env.cr.fetchall()
         return [
             {
-                "name": row[0],
-                "total_bytes": int(row[1] or 0),
-                "table_bytes": int(row[2] or 0),
-                "row_estimate": int(row[3] or 0),
+                "name": name,
+                "total_bytes": int(total_bytes or 0),
+                "table_bytes": int(table_bytes or 0),
+                "row_estimate": int(row_estimate or 0),
             }
-            for row in self.env.cr.fetchall()
+            for name, total_bytes, table_bytes, row_estimate in self.env.cr.fetchall()
         ]
 
     @api.model
@@ -289,20 +281,6 @@ class HealthCheckResult(models.Model):
         """Total size of the current database in bytes."""
         self.env.cr.execute("SELECT pg_database_size(current_database())::bigint")
         return int(self.env.cr.fetchone()[0] or 0)
-
-    # TODO: no need to make new function for search
-    def _previous_pg_report(self):
-        """Most recent prior pg_report row with status='ok', or empty
-        recordset if none exists."""
-        return self.search(
-            [
-                ("check_type", "=", "pg_report"),
-                ("status", "=", "ok"),
-                ("id", "!=", self.id or 0),
-            ],
-            order="date desc, id desc",
-            limit=1,
-        )
 
     @staticmethod
     def _diff_tables(current, previous):
@@ -323,7 +301,7 @@ class HealthCheckResult(models.Model):
         return current
 
     @api.model
-    def _run_pg_report(self):
+    def _cron_pg_report(self):
         """Generate a monthly PostgreSQL growth report, store the snapshot,
         and email it to configured recipients. Returns the created record.
 
@@ -333,7 +311,11 @@ class HealthCheckResult(models.Model):
         try:
             tables = self._pg_top_tables(limit=10)
             db_size = self._pg_db_size()
-            previous = self._previous_pg_report()
+            previous = self.search(
+                [("check_type", "=", "pg_report"), ("status", "=", "ok")],
+                order="date desc, id desc",
+                limit=1,
+            )
             prev_tables = []
             prev_db_size = None
             if previous and previous.details_json:
@@ -372,24 +354,25 @@ class HealthCheckResult(models.Model):
         return record
 
     def _send_pg_report_email(self):
-        """Send the monthly report. Never raises. Skipped when recipients
-        list is empty (the report row is still created)."""
+        """Send the monthly report. Skipped when recipients list is empty
+        (the report row is still created)."""
         self.ensure_one()
         if self.status != "ok":
             return
-        try:
-            recipients = self._get_pg_report_recipients()
-            if not recipients:
-                return
-            template = self.env.ref(
-                "odoo_health_check.mail_template_pg_monthly",
-                raise_if_not_found=False,
+        recipients = self._get_pg_report_recipients()
+        if not recipients:
+            return
+        template = self.env.ref(
+            "odoo_health_check.mail_template_pg_monthly",
+            raise_if_not_found=False,
+        )
+        if not template:
+            _logger.warning(
+                "odoo_health_check: pg report template missing, skipping email"
             )
-            if not template:
-                _logger.warning(
-                    "odoo_health_check: pg report template missing, skipping email"
-                )
-                return
+            return
+        # Narrow try/except: only the mail enqueue needs guarding.
+        try:
             template.send_mail(
                 self.id,
                 force_send=False,
@@ -438,8 +421,10 @@ class HealthCheckResult(models.Model):
             if self.check_type == "pg_report"
             else "odoo_health_check.health_check_result_action"
         )
-        # TODO: delete raise_if_not_found - better to know that action is missing or add logger
         action = self.env.ref(xml_id, raise_if_not_found=False)
         if not action:
+            _logger.warning(
+                "odoo_health_check: action %s missing, falling back to base URL", xml_id,
+            )
             return base
         return "%s/odoo/action-%s/%s" % (base, action.id, self.id)

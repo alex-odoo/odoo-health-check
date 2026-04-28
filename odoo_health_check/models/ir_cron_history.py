@@ -27,12 +27,12 @@ class IrCronHistory(models.Model):
         index=True,
     )
     date_end = fields.Datetime(string="Ended")
-    # TODO: should be computed date_end - date_start
     duration_sec = fields.Float(
         string="Duration (s)",
         digits=(12, 3),
-        default=0.0,
-        help="Measured via time.perf_counter() in the _callback override for sub-second precision.",
+        compute="_compute_duration_sec",
+        store=True,
+        help="date_end - date_start in seconds. NULL while the run is in flight.",
     )
     state = fields.Selection(
         [
@@ -59,9 +59,16 @@ class IrCronHistory(models.Model):
         ),
     ]
 
-    # TODO: no need to return values from cron function
+    @api.depends("date_start", "date_end")
+    def _compute_duration_sec(self):
+        for rec in self:
+            if rec.date_start and rec.date_end:
+                rec.duration_sec = (rec.date_end - rec.date_start).total_seconds()
+            else:
+                rec.duration_sec = 0.0
+
     @api.model
-    def _odoo_health_cleanup(self, batch_size=5000):
+    def _cron_cleanup_history(self, batch_size=5000):
         """Delete history rows older than the configured retention window.
 
         Retention days comes from `odoo_health_check.retention_days`
@@ -70,7 +77,6 @@ class IrCronHistory(models.Model):
         param = self.env["ir.config_parameter"].sudo().get_param(
             "odoo_health_check.retention_days", default="30",
         )
-        # TODO: no need to use try/except need to use isalnum
         try:
             retention = int(param)
         except (TypeError, ValueError):
@@ -104,5 +110,9 @@ class IrCronHistory(models.Model):
             "odoo_health_check.ir_cron_history_action", raise_if_not_found=False,
         )
         if not action:
+            _logger.warning(
+                "odoo_health_check: action ir_cron_history_action missing, "
+                "falling back to base URL",
+            )
             return base
         return "%s/odoo/action-%s/%s" % (base, action.id, self.id)

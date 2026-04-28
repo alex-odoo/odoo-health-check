@@ -21,6 +21,18 @@ class TestCronHistoryModel(OdooHealthTestCommon):
         self.assertFalse(hist.date_end)
         self.assertEqual(hist.duration_sec, 0.0)
 
+    def test_duration_sec_computed_from_dates(self):
+        cron = self._make_cron()
+        hist = self.History.create({
+            "cron_id": cron.id,
+            "date_start": "2026-04-29 10:00:00",
+        })
+        hist.write({
+            "state": "success",
+            "date_end": "2026-04-29 10:00:42",
+        })
+        self.assertEqual(hist.duration_sec, 42.0)
+
     def test_date_order_constraint_violated_on_write(self):
         cron = self._make_cron()
         hist = self.History.create({"cron_id": cron.id})
@@ -53,7 +65,7 @@ class TestCronHistoryModel(OdooHealthTestCommon):
         })
         self.Params.set_param("odoo_health_check.retention_days", "30")
 
-        removed = self.History._odoo_health_cleanup()
+        removed = self.History._cron_cleanup_history()
 
         self.assertGreaterEqual(removed, 1)
         self.assertFalse(old.exists())
@@ -69,7 +81,7 @@ class TestCronHistoryModel(OdooHealthTestCommon):
         })
         self.Params.set_param("odoo_health_check.retention_days", "0")
 
-        removed = self.History._odoo_health_cleanup()
+        removed = self.History._cron_cleanup_history()
 
         self.assertEqual(removed, 0)
         self.assertTrue(old.exists())
@@ -84,7 +96,7 @@ class TestCronHistoryModel(OdooHealthTestCommon):
         })
         self.Params.set_param("odoo_health_check.retention_days", "not-a-number")
 
-        removed = self.History._odoo_health_cleanup()
+        removed = self.History._cron_cleanup_history()
 
         self.assertEqual(removed, 0)
 

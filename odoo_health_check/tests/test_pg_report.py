@@ -55,7 +55,7 @@ class TestPgReportSql(OdooHealthTestCommon):
 
 @tagged("post_install", "-at_install", "odoo_health_check")
 class TestPgReportRun(OdooHealthTestCommon):
-    """Cover _run_pg_report with mocked SQL helpers."""
+    """Cover _cron_pg_report with mocked SQL helpers."""
 
     @classmethod
     def setUpClass(cls):
@@ -79,7 +79,7 @@ class TestPgReportRun(OdooHealthTestCommon):
             _table("res_users", 1_000_000, 800_000, 50),
             _table("ir_attachment", 5_000_000, 4_000_000, 200),
         ]), patch(PATH_DB, return_value=10_000_000):
-            row = self.Result._run_pg_report()
+            row = self.Result._cron_pg_report()
         self.assertEqual(row.check_type, "pg_report")
         self.assertEqual(row.status, "ok")
         data = json.loads(row.details_json)
@@ -98,14 +98,14 @@ class TestPgReportRun(OdooHealthTestCommon):
             _table("res_users", 1_000_000, 800_000, 50),
             _table("ir_attachment", 5_000_000, 4_000_000, 200),
         ]), patch(PATH_DB, return_value=10_000_000):
-            self.Result._run_pg_report()
+            self.Result._cron_pg_report()
         # Second report - growth
         with patch(PATH_TOP, return_value=[
             _table("res_users", 1_500_000, 1_200_000, 60),
             _table("ir_attachment", 6_000_000, 5_000_000, 250),
             _table("brand_new_table", 100_000, 80_000, 5),
         ]), patch(PATH_DB, return_value=12_000_000):
-            row = self.Result._run_pg_report()
+            row = self.Result._cron_pg_report()
         data = json.loads(row.details_json)
         self.assertEqual(data["total_db_bytes_delta"], 2_000_000)
         by_name = {t["name"]: t for t in data["tables"]}
@@ -119,7 +119,7 @@ class TestPgReportRun(OdooHealthTestCommon):
         before = self.Mail.search_count([])
         with patch(PATH_TOP, return_value=[_table("foo", 100, 80, 5)]), \
              patch(PATH_DB, return_value=200):
-            self.Result._run_pg_report()
+            self.Result._cron_pg_report()
         self.assertEqual(self.Mail.search_count([]) - before, 1)
         mail = self.Mail.search([], order="id desc", limit=1)
         self.assertEqual(mail.email_to, "dba@example.com")
@@ -130,7 +130,7 @@ class TestPgReportRun(OdooHealthTestCommon):
         before = self.Mail.search_count([])
         with patch(PATH_TOP, return_value=[_table("foo", 100, 80, 5)]), \
              patch(PATH_DB, return_value=200):
-            self.Result._run_pg_report()
+            self.Result._cron_pg_report()
         self.assertEqual(self.Mail.search_count([]), before)
 
     def test_run_records_error_row_on_sql_failure(self):
@@ -138,7 +138,7 @@ class TestPgReportRun(OdooHealthTestCommon):
         before = self.Mail.search_count([])
         with patch(PATH_TOP, side_effect=RuntimeError("simulated SQL error")), \
              mute_logger("odoo.addons.odoo_health_check.models.health_check_result"):
-            row = self.Result._run_pg_report()
+            row = self.Result._cron_pg_report()
         self.assertEqual(row.status, "error")
         details = json.loads(row.details_json)
         self.assertEqual(details["type"], "RuntimeError")
@@ -188,7 +188,7 @@ class TestPgReportConfig(OdooHealthTestCommon):
         self.assertTrue(cron.active)
         self.assertEqual(cron.interval_type, "months")
         self.assertEqual(cron.interval_number, 1)
-        self.assertIn("_run_pg_report", cron.code)
+        self.assertIn("_cron_pg_report", cron.code)
 
 
 @tagged("post_install", "-at_install", "odoo_health_check")

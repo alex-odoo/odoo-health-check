@@ -33,7 +33,7 @@ class TestConfigSettings(OdooHealthTestCommon):
         self.assertTrue(cron.active)
         self.assertEqual(cron.interval_type, "days")
         self.assertEqual(cron.interval_number, 1)
-        self.assertIn("_odoo_health_cleanup", cron.code)
+        self.assertIn("_cron_cleanup_history", cron.code)
 
     def test_failure_mail_template_registered(self):
         template = self.env.ref(

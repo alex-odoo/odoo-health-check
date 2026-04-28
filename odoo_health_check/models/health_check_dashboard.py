@@ -6,14 +6,14 @@ from odoo import api, fields, models
 from .health_check_result import _human_bytes, _human_delta_bytes
 
 
-# TODO: This logic needs to be completely reworked.
-#  Creating a new dashboard record every time the page is opened or refreshed is not a good approach.
-#  The dashboard should be created once, and the data should be recalculated as needed.
-class HealthCheckDashboard(models.TransientModel):
-    """At-a-glance summary of cron health, disk usage, and the latest
-    PostgreSQL growth report. A new transient record is created each
-    time the dashboard action is opened. All values are filled by
-    `default_get` reading the underlying models - no stored state.
+class HealthCheckDashboard(models.Model):
+    """Singleton dashboard summarising cron health, disk usage, and the
+    latest PostgreSQL growth report.
+
+    Backed by a single record (xmlid `dashboard_singleton`) whose data
+    fields are all `compute=, store=False`, so every read recomputes
+    against the underlying tables. Refresh = re-open the same record.
+    No transient row churn, no stored snapshot to invalidate.
     """
 
     _name = "health.check.dashboard"
@@ -22,41 +22,93 @@ class HealthCheckDashboard(models.TransientModel):
 
     name = fields.Char(default="Dashboard", readonly=True)
 
-    # TODO: All these fields should be computed dynamically; currently, they are all stored in the database.
-    # ------------------------------------------------------------------------
-    failures_24h = fields.Integer(string="Cron failures (24h)", readonly=True)
-    failures_7d = fields.Integer(string="Cron failures (7d)", readonly=True)
-    history_total_7d = fields.Integer(string="Cron runs (7d)", readonly=True)
+    failures_24h = fields.Integer(
+        string="Cron failures (24h)",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    failures_7d = fields.Integer(
+        string="Cron failures (7d)",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    history_total_7d = fields.Integer(
+        string="Cron runs (7d)",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
 
     disk_root_status = fields.Selection(
         [("ok", "OK"), ("warn", "Warning"), ("critical", "Critical"),
          ("error", "Error"), ("unknown", "No data yet")],
+        compute="_compute_dashboard",
         readonly=True,
     )
-    disk_root_used_pct = fields.Float(readonly=True, digits=(5, 2))
-    disk_root_summary = fields.Char(readonly=True)
-    disk_root_at = fields.Datetime(string="Last disk:root sample", readonly=True)
+    disk_root_used_pct = fields.Float(
+        compute="_compute_dashboard",
+        readonly=True,
+        digits=(5, 2),
+    )
+    disk_root_summary = fields.Char(
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    disk_root_at = fields.Datetime(
+        string="Last disk:root sample",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
 
     disk_filestore_status = fields.Selection(
         [("ok", "OK"), ("warn", "Warning"), ("critical", "Critical"),
          ("error", "Error"), ("unknown", "No data yet")],
+        compute="_compute_dashboard",
         readonly=True,
     )
-    disk_filestore_used_pct = fields.Float(readonly=True, digits=(5, 2))
-    disk_filestore_summary = fields.Char(readonly=True)
-    disk_filestore_at = fields.Datetime(string="Last filestore sample", readonly=True)
-    # ------------------------------------------------------------------------
+    disk_filestore_used_pct = fields.Float(
+        compute="_compute_dashboard",
+        readonly=True,
+        digits=(5, 2),
+    )
+    disk_filestore_summary = fields.Char(
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    disk_filestore_at = fields.Datetime(
+        string="Last filestore sample",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
 
-    last_pg_report_at = fields.Datetime(string="Last PG report", readonly=True)
-    last_pg_report_db_size = fields.Char(string="DB size", readonly=True)
-    last_pg_report_db_delta = fields.Char(string="DB Δ vs previous", readonly=True)
-    last_pg_report_table = fields.Char(string="Largest table", readonly=True)
+    last_pg_report_at = fields.Datetime(
+        string="Last PG report",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    last_pg_report_db_size = fields.Char(
+        string="DB size",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    last_pg_report_db_delta = fields.Char(
+        string="DB delta vs previous",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
+    last_pg_report_table = fields.Char(
+        string="Largest table",
+        compute="_compute_dashboard",
+        readonly=True,
+    )
 
-    @api.model
-    def default_get(self, fields_list):
-        vals = super().default_get(fields_list)
-        vals.update(self._compute_dashboard_snapshot())
-        return vals
+    # No @api.depends on purpose: inputs live in other models. With
+    # store=False the ORM recomputes on every field access, so opening
+    # or refreshing the form view always reads fresh data.
+    def _compute_dashboard(self):
+        for rec in self:
+            snapshot = rec._compute_dashboard_snapshot()
+            for key, value in snapshot.items():
+                rec[key] = value
 
     @api.model
     def _compute_dashboard_snapshot(self):
@@ -95,9 +147,6 @@ class HealthCheckDashboard(models.TransientModel):
             order="date desc, id desc",
             limit=1,
         )
-
-        # TODO: If you change even one of these fields (prefix_status, etc),
-        #  errors will occur and it will be difficult to track them down.
         if not row:
             return {
                 f"{prefix}_status": "unknown",
@@ -159,24 +208,27 @@ class HealthCheckDashboard(models.TransientModel):
         }
 
     @api.model
+    def _get_singleton(self):
+        """Return the singleton dashboard record. Created on install via
+        data XML; this fallback creates it on the fly if a manual unlink
+        somehow removed it."""
+        rec = self.env.ref(
+            "odoo_health_check.dashboard_singleton", raise_if_not_found=False,
+        )
+        if rec:
+            return rec
+        return self.sudo().create({"name": "Dashboard"})
+
+    @api.model
     def action_open(self):
-        # TODO: It’s unnecessary to recreate the record every time.
-        #  It’s better to use the existing one and just refresh the data with cron or computed fields.
-        #  Otherwise, a new record will be created each time the view is opened.
-        """Server-action entry point. Create a fresh transient record so
-        the form opens on a real id (URL has no '/new' segment) and the
-        breadcrumb shows the record name instead of 'New'."""
-        rec = self.create({})
-        return self._dashboard_action(rec.id)
+        """Server-action entry point: open the singleton dashboard.
+        Form view rendering triggers the compute fields."""
+        return self._dashboard_action(self._get_singleton().id)
 
     def action_refresh(self):
-        # TODO: It’s unnecessary to recreate the record every time.
-        #  It’s better to use the existing one and just refresh the data with cron or computed fields.
-        #  Otherwise, a new record will be created each time the button is clicked.
-        """Re-open the dashboard with a fresh snapshot."""
-        # TODO:
-        rec = self.create({})
-        return self._dashboard_action(rec.id)
+        """Re-open the singleton. Form reload re-reads the compute
+        fields, which always recompute against current data."""
+        return self._dashboard_action(self._get_singleton().id)
 
     @api.model
     def _dashboard_action(self, res_id):
