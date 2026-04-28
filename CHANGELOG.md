@@ -2,6 +2,29 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.11.1] - 2026-04-29
+
+### Fixed
+- Existing installs upgraded from <=1.10.x to 1.11.0 hit
+  `AttributeError: 'health.check.result' object has no attribute '_run_disk_checks'`
+  on every cron tick. The 1.11.0 release renamed the three cron methods
+  (`_run_disk_checks` -> `_cron_check_disk`, `_run_pg_report` ->
+  `_cron_pg_report`, `_odoo_health_cleanup` -> `_cron_cleanup_history`)
+  but `data/ir_cron_data.xml` has `noupdate="1"` so the linked
+  `ir.actions.server.code` on each cron was pinned to the old method
+  name. Fresh installs were fine; in-place upgrades broke. Added
+  `migrations/18.0.1.11.1/post-migration.py` that rewrites the
+  server-action code on each of the three crons via xmlid lookup.
+  Idempotent.
+
+### Lesson
+- Renaming a method that an `ir.cron` data record references in its
+  `code` field requires either (a) dropping `noupdate="1"` for that
+  release - which resets users' cron toggles - or (b) shipping a
+  post-migration that updates `ir_act_server.code` for each affected
+  xmlid. Option (b) preserves user customisations and is now the
+  Rteam pattern. To be codified in Constitution.
+
 ## [18.0.1.11.0] - 2026-04-29
 
 ### Changed
