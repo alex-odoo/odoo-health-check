@@ -1,3 +1,4 @@
+# TODO: delete migration folders not needed for final version
 def migrate(cr, version):
     cr.execute("""
         SELECT res_id FROM ir_model_data

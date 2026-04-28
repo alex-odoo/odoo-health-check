@@ -10,16 +10,21 @@ _logger = logging.getLogger(__name__)
 class IrCron(models.Model):
     _inherit = "ir.cron"
 
+    # TODO: no need for extra param
     def _callback(self, cron_name, server_action_id, *extra):
+        # TODO: delete this comment
         # Odoo 18 dropped the third positional `job_id` arg mid-version
         # (new signature: `_callback(self, cron_name, server_action_id)`,
         # self is a singleton via ensure_one). The *extra accepts and
         # forwards any legacy third arg so installs still on an older 18.0
         # build don't break.
+        # TODO: cron_id = self.id
         cron_id = self.id if len(self) == 1 else (extra[0] if extra else None)
         history_id = self._odoo_health_log_start(cron_id)
+        # TODO: no need for counter just ir.cron.history.date_end - ir.cron.history.date_start
         t0 = time.perf_counter()
         try:
+            # TODO: result = super()._callback(cron_name, server_action_id)
             result = super()._callback(cron_name, server_action_id, *extra)
         except Exception:
             self._odoo_health_log_end(
@@ -32,6 +37,7 @@ class IrCron(models.Model):
     def method_direct_trigger(self):
         for cron in self:
             history_id = cron._odoo_health_log_start(cron.id)
+            # TODO: no need for counter just ir.cron.history.date_end - ir.cron.history.date_start
             t0 = time.perf_counter()
             try:
                 super(IrCron, cron).method_direct_trigger()
@@ -50,6 +56,7 @@ class IrCron(models.Model):
         own transaction. Sudoed because crons may run under arbitrary users
         and this is infrastructure logging, not user-driven data.
         """
+        # TODO: No need to make try/except for creating records
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
@@ -67,6 +74,7 @@ class IrCron(models.Model):
     def _odoo_health_log_end(self, history_id, state, duration_sec, error_traceback):
         if not history_id:
             return
+        # TODO: No need to make try/except for browsing records.
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
@@ -88,6 +96,7 @@ class IrCron(models.Model):
 
     @staticmethod
     def _odoo_health_send_failure_email(env, history):
+        # TODO: No need to make try/except for this code.
         try:
             emails_param = (env["ir.config_parameter"].sudo()
                             .get_param("odoo_health_check.notify_emails") or "").strip()

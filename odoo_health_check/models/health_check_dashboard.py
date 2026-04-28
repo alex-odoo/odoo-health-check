@@ -6,6 +6,9 @@ from odoo import api, fields, models
 from .health_check_result import _human_bytes, _human_delta_bytes
 
 
+# TODO: This logic needs to be completely reworked.
+#  Creating a new dashboard record every time the page is opened or refreshed is not a good approach.
+#  The dashboard should be created once, and the data should be recalculated as needed.
 class HealthCheckDashboard(models.TransientModel):
     """At-a-glance summary of cron health, disk usage, and the latest
     PostgreSQL growth report. A new transient record is created each
@@ -19,6 +22,8 @@ class HealthCheckDashboard(models.TransientModel):
 
     name = fields.Char(default="Dashboard", readonly=True)
 
+    # TODO: All these fields should be computed dynamically; currently, they are all stored in the database.
+    # ------------------------------------------------------------------------
     failures_24h = fields.Integer(string="Cron failures (24h)", readonly=True)
     failures_7d = fields.Integer(string="Cron failures (7d)", readonly=True)
     history_total_7d = fields.Integer(string="Cron runs (7d)", readonly=True)
@@ -40,6 +45,7 @@ class HealthCheckDashboard(models.TransientModel):
     disk_filestore_used_pct = fields.Float(readonly=True, digits=(5, 2))
     disk_filestore_summary = fields.Char(readonly=True)
     disk_filestore_at = fields.Datetime(string="Last filestore sample", readonly=True)
+    # ------------------------------------------------------------------------
 
     last_pg_report_at = fields.Datetime(string="Last PG report", readonly=True)
     last_pg_report_db_size = fields.Char(string="DB size", readonly=True)
@@ -89,6 +95,9 @@ class HealthCheckDashboard(models.TransientModel):
             order="date desc, id desc",
             limit=1,
         )
+
+        # TODO: If you change even one of these fields (prefix_status, etc),
+        #  errors will occur and it will be difficult to track them down.
         if not row:
             return {
                 f"{prefix}_status": "unknown",
@@ -151,6 +160,9 @@ class HealthCheckDashboard(models.TransientModel):
 
     @api.model
     def action_open(self):
+        # TODO: It’s unnecessary to recreate the record every time.
+        #  It’s better to use the existing one and just refresh the data with cron or computed fields.
+        #  Otherwise, a new record will be created each time the view is opened.
         """Server-action entry point. Create a fresh transient record so
         the form opens on a real id (URL has no '/new' segment) and the
         breadcrumb shows the record name instead of 'New'."""
@@ -158,7 +170,11 @@ class HealthCheckDashboard(models.TransientModel):
         return self._dashboard_action(rec.id)
 
     def action_refresh(self):
+        # TODO: It’s unnecessary to recreate the record every time.
+        #  It’s better to use the existing one and just refresh the data with cron or computed fields.
+        #  Otherwise, a new record will be created each time the button is clicked.
         """Re-open the dashboard with a fresh snapshot."""
+        # TODO:
         rec = self.create({})
         return self._dashboard_action(rec.id)
 
