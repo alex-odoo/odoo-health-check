@@ -2,6 +2,21 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.11.3] - 2026-04-29
+
+### Removed
+- `odoo_health_check/migrations/` folder dropped entirely (three
+  pre/post-migrations for 1.10.9 / 1.11.0 / 1.11.1). The module is
+  being relisted on apps.odoo.com as a fresh publication with no
+  prior live installs to upgrade, so the in-place upgrade scripts
+  are dead weight. New installs always run on the current schema.
+
+### Changed
+- Reverses the push-back from 1.11.2 on review item #2 (Taras was
+  right under the relisting context that was not stated in the
+  first round). Migration files are forever ONLY for modules with
+  a live installed user base.
+
 ## [18.0.1.11.2] - 2026-04-29
 
 ### Changed
