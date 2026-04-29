@@ -3,6 +3,7 @@ import socket
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -26,7 +27,9 @@ class IrCronHistory(models.Model):
         default=fields.Datetime.now,
         index=True,
     )
-    date_end = fields.Datetime(string="Ended")
+    date_end = fields.Datetime(
+        string="Ended",
+    )
     duration_sec = fields.Float(
         string="Duration (s)",
         digits=(12, 3),
@@ -44,7 +47,9 @@ class IrCronHistory(models.Model):
         default="running",
         index=True,
     )
-    error_traceback = fields.Text(string="Error Traceback")
+    error_traceback = fields.Text(
+        string="Error Traceback",
+    )
     server_name = fields.Char(
         string="Server",
         default=lambda _: socket.gethostname(),
@@ -77,22 +82,9 @@ class IrCronHistory(models.Model):
         param = self.env["ir.config_parameter"].sudo().get_param(
             "odoo_health_check.retention_days", default="30",
         )
-        # int() + try/except is the EAFP idiom for parsing. str.isnumeric()
-        # was suggested in review but rejects "30 " (settings forms can
-        # round-trip trailing whitespace) and only accepts str, while
-        # ir.config_parameter values can be int right after a write before
-        # cache re-read. Negative values are handled explicitly below as
-        # "disable cleanup" rather than as parse errors.
-        try:
-            retention = int(param)
-        except (TypeError, ValueError):
-            _logger.warning(
-                "odoo_health_check: invalid retention_days=%r, skipping cleanup", param,
-            )
-            return 0
-        if retention <= 0:
-            # 0 or negative = cleanup disabled (documented in res_config_settings help).
-            return 0
+        if not param.isdigit():
+            raise UserError("Invalid retention days")
+        retention = int(param)
         cutoff = fields.Datetime.now() - timedelta(days=retention)
         to_delete = self.search(
             [("date_start", "<", cutoff)], limit=batch_size, order="date_start asc",

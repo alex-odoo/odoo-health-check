@@ -5,6 +5,7 @@ import shutil
 from odoo import api, fields, models
 from odoo.tools import config
 
+
 _logger = logging.getLogger(__name__)
 
 DEFAULT_WARN_PCT = 80.0
@@ -85,12 +86,15 @@ class HealthCheckResult(models.Model):
         default="ok",
         index=True,
     )
-    mount_path = fields.Char(string="Mount / Path")
-    # Float(digits=(20,0)) maps to PostgreSQL numeric(20,0) which holds any
-    # realistic disk size in bytes. fields.Integer is int4 (~2.1 GB ceiling)
-    # and overflows on any non-trivial volume.
-    total_bytes = fields.Float(digits=(20, 0))
-    free_bytes = fields.Float(digits=(20, 0))
+    mount_path = fields.Char(
+        string="Mount / Path",
+    )
+    total_bytes = fields.Float(
+        digits=(20, 0),
+    )
+    free_bytes = fields.Float(
+        digits=(20, 0),
+    )
     used_pct = fields.Float(
         string="Used %",
         digits=(5, 2),
