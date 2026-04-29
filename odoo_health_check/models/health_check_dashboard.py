@@ -243,6 +243,6 @@ class HealthCheckDashboard(models.Model):
                 "odoo_health_check.health_check_dashboard_view_form"
             ).id,
             "res_id": res_id,
-            "target": "current",
+            "target": "main",
             "name": "Health Check Dashboard",
         }
