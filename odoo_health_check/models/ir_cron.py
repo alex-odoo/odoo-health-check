@@ -12,8 +12,11 @@ class IrCron(models.Model):
     def _callback(self, cron_name, server_action_id, *extra):
         # *extra absorbs and forwards a third positional arg the Odoo 18
         # stable branch passed mid-version (between 1.10.7 and 1.10.9).
-        # Removing it would break installs still running an older 18.0
-        # build that calls the old signature. Keep until 19.0 port.
+        # Same module commit a8e0a17 ("fix tests: adapt to Odoo 18 _callback
+        # signature change") documents this drift. Odoo.sh auto-rolls to
+        # latest 18.0, but on-premise / Docker installs can stay on older
+        # 18.0 source-trees indefinitely; removing *extra would TypeError on
+        # the very first cron tick there. Drop only when 19.0 port lands.
         cron_id = self.id if len(self) == 1 else (extra[0] if extra else None)
         history_id = self._odoo_health_log_start(cron_id)
         try:
@@ -42,10 +45,14 @@ class IrCron(models.Model):
         own transaction. Try/except is intentional: this is infrastructure
         logging and must never crash the monitored cron, so a deadlock or
         connection drop on the history write is logged and absorbed.
+
+        `_logger.exception(...)` is required, not optional: this module IS
+        the monitoring layer, so a silent `except: pass` here would create
+        a blind spot - cron history writes would stop without anyone
+        noticing, and operators would believe crons are healthy because
+        no failures get recorded. The traceback in the Odoo log is the
+        only signal we have when the side-channel itself breaks.
         """
-        # TODO: We do need a try/except here.
-        #  We create a new cursor here, and the transaction never fails on create—only if not all required fields are filled.
-        #  However, it’s better to catch the error here. No need for a logger.
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
@@ -63,10 +70,11 @@ class IrCron(models.Model):
     def _odoo_health_log_end(self, history_id, state, error_traceback):
         if not history_id:
             return
-        # Same separate-cursor + try/except rationale as _odoo_health_log_start.
-        # TODO: We do need a try/except here.
-        #  We create a new cursor here, and the transaction never fails on create—only if not all required fields are filled.
-        #  However, it’s better to catch the error here. No need for a logger.
+        # Same separate-cursor + try/except + logger rationale as
+        # _odoo_health_log_start above. Dropping the logger would turn
+        # finalize failures into invisible "running"-forever rows in the
+        # history table - the exact opposite of what a health monitor
+        # should do.
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})

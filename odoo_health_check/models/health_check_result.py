@@ -91,7 +91,10 @@ class HealthCheckResult(models.Model):
     # and overflows on any non-trivial volume.
     total_bytes = fields.Float(digits=(20, 0))
     free_bytes = fields.Float(digits=(20, 0))
-    used_pct = fields.Float(string="Used %", digits=(5, 2))
+    used_pct = fields.Float(
+        string="Used %",
+        digits=(5, 2),
+    )
     details_json = fields.Text(
         string="Details (JSON)",
         help="Raw details, error traceback, or extra metadata as JSON.",

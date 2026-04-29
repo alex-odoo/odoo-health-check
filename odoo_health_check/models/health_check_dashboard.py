@@ -20,7 +20,10 @@ class HealthCheckDashboard(models.Model):
     _description = "Odoo Health Check Dashboard"
     _rec_name = "name"
 
-    name = fields.Char(default="Dashboard", readonly=True)
+    name = fields.Char(
+        default="Dashboard",
+        readonly=True,
+    )
 
     failures_24h = fields.Integer(
         string="Cron failures (24h)",

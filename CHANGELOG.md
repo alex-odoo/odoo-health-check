@@ -2,6 +2,38 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.11.2] - 2026-04-29
+
+### Changed
+- Second-round review pass (Taras, 6 TODOs in commit 1d0bc37). Triage:
+  APPLY 2, PARTIAL 1, PUSH BACK 3 with rationale documented inline.
+
+### Applied
+- Field-definition formatting: `used_pct` (health_check_result) and
+  `name` (health_check_dashboard) reformatted to multi-line for fields
+  with two or more kwargs. Now consistent across all 5 models.
+- `_cron_cleanup_history` parsing: kept `int()` + try/except (EAFP),
+  but added explicit comment-block defending the choice over
+  `str.isnumeric()` (rejects trailing whitespace, str-only) and an
+  inline note that the existing `if retention <= 0` is the
+  documented "disable cleanup" path, not a parser fallback.
+
+### Pushed back (kept with expanded rationale inline)
+- `migrations/18.0.1.10.9/pre-migration.py`: docstring expanded to state
+  that 1.10.x was published on apps.odoo.com - users on 1.10.8-era
+  installs would crash on in-place upgrade without this script.
+  Migration files are forever.
+- `*extra` arg on `_callback`: comment expanded to reference our own
+  prior fix-commit `a8e0a17` ("adapt to Odoo 18 _callback signature
+  change"), and notes Odoo.sh auto-rolls but on-premise / Docker
+  installs can pin to older 18.0 source-trees indefinitely.
+- `_logger.exception(...)` inside the side-channel cursor try/except in
+  `_odoo_health_log_start` / `_odoo_health_log_end`: silent
+  `except: pass` would create a monitoring blind spot - history rows
+  would silently stop being written and operators would believe crons
+  are healthy. The traceback in the Odoo log is the only signal we have
+  when the side-channel itself fails. Docstrings expanded.
+
 ## [18.0.1.11.1] - 2026-04-29
 
 ### Fixed

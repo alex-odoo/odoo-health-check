@@ -13,10 +13,12 @@ entry) so the new server-action record loads cleanly under the same
 xmlid. The fetchone guard makes it safe to re-run on already-migrated
 DBs.
 
-DO NOT delete this file just because the version is "old". apps.odoo.com
-ships every release as an in-place upgrade for installed users; users
-upgrading from the 1.10.8-era LGPL-3 release would fail without this
-script, even years from now.
+DO NOT delete this file just because the version is "old". The 1.10.x
+line was published on apps.odoo.com - confirmed installed user base
+exists. apps.odoo.com Scan ships every release as an in-place upgrade
+for those users, so an upgrade from the 1.10.8-era LGPL-3 release that
+skips this pre-migration would crash with the ParseError above and
+block the user's apps update queue. Migration files are forever.
 """
 
 def migrate(cr, version):

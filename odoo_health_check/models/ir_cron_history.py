@@ -77,7 +77,12 @@ class IrCronHistory(models.Model):
         param = self.env["ir.config_parameter"].sudo().get_param(
             "odoo_health_check.retention_days", default="30",
         )
-        # TODO: we do not need negative nuber there, it is days. Use isnumeric
+        # int() + try/except is the EAFP idiom for parsing. str.isnumeric()
+        # was suggested in review but rejects "30 " (settings forms can
+        # round-trip trailing whitespace) and only accepts str, while
+        # ir.config_parameter values can be int right after a write before
+        # cache re-read. Negative values are handled explicitly below as
+        # "disable cleanup" rather than as parse errors.
         try:
             retention = int(param)
         except (TypeError, ValueError):
@@ -86,6 +91,7 @@ class IrCronHistory(models.Model):
             )
             return 0
         if retention <= 0:
+            # 0 or negative = cleanup disabled (documented in res_config_settings help).
             return 0
         cutoff = fields.Datetime.now() - timedelta(days=retention)
         to_delete = self.search(
