@@ -77,6 +77,7 @@ class IrCronHistory(models.Model):
         param = self.env["ir.config_parameter"].sudo().get_param(
             "odoo_health_check.retention_days", default="30",
         )
+        # TODO: we do not need negative nuber there, it is days. Use isnumeric
         try:
             retention = int(param)
         except (TypeError, ValueError):

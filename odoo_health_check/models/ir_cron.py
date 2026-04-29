@@ -43,6 +43,9 @@ class IrCron(models.Model):
         logging and must never crash the monitored cron, so a deadlock or
         connection drop on the history write is logged and absorbed.
         """
+        # TODO: We do need a try/except here.
+        #  We create a new cursor here, and the transaction never fails on create—only if not all required fields are filled.
+        #  However, it’s better to catch the error here. No need for a logger.
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
@@ -61,6 +64,9 @@ class IrCron(models.Model):
         if not history_id:
             return
         # Same separate-cursor + try/except rationale as _odoo_health_log_start.
+        # TODO: We do need a try/except here.
+        #  We create a new cursor here, and the transaction never fails on create—only if not all required fields are filled.
+        #  However, it’s better to catch the error here. No need for a logger.
         try:
             with self.pool.cursor() as new_cr:
                 env = api.Environment(new_cr, SUPERUSER_ID, {})
