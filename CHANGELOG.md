@@ -2,6 +2,16 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.12.1] - 2026-04-30
+
+### Changed
+- Listing page (`static/description/index.html`) and `README.rst` now
+  advertise the available locales: a new "Available in your language"
+  section lists English, Русский, Українська, Deutsch, Español, Română,
+  Polski, العربية in their native scripts. A "8 languages" badge is
+  added to the hero badge row. Pure documentation update - no code or
+  data changes.
+
 ## [18.0.1.12.0] - 2026-04-30
 
 ### Added

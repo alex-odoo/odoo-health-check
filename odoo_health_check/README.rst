@@ -79,6 +79,26 @@ Row counts use ``pg_class.reltuples`` (PostgreSQL's own statistics from
 the last ``ANALYZE``) - fast on multi-million-row tables, never times
 out, accurate enough for trend reports.
 
+Available in your language
+==========================
+
+UI labels, settings help, search filters, dashboard tiles, action
+menus, cron names, and the three alert emails are translated to seven
+additional languages. Translations apply automatically based on each
+user's Odoo language preference - no extra configuration.
+
+* English (``en``)
+* Русский (``ru``)
+* Українська (``uk``)
+* Deutsch (``de``)
+* Español (``es``)
+* Română (``ro``)
+* Polski (``pl``)
+* العربية (``ar``)
+
+Contributions for additional languages are welcome - the canonical
+``.pot`` template ships at ``odoo_health_check/i18n/odoo_health_check.pot``.
+
 Configuration
 =============
 
