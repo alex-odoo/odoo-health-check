@@ -73,7 +73,7 @@
                 <filter string="Warning" name="warn" domain="[('status', '=', 'warn')]"/>
                 <filter string="Critical" name="critical" domain="[('status', '=', 'critical')]"/>
                 <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Check Type" name="group_check_type" context="{'group_by': 'check_type'}"/>
                     <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
                     <filter string="Day" name="group_day" context="{'group_by': 'date:day'}"/>

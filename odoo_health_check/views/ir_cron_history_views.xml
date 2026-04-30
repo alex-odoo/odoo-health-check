@@ -66,7 +66,7 @@
                 <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
                 <filter string="Success" name="success" domain="[('state', '=', 'success')]"/>
                 <filter string="Failed" name="failed" domain="[('state', '=', 'failed')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Scheduled Action" name="group_cron" context="{'group_by': 'cron_id'}"/>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Server" name="group_server" context="{'group_by': 'server_name'}"/>

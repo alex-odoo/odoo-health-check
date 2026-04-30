@@ -56,13 +56,10 @@ class IrCronHistory(models.Model):
         readonly=True,
     )
 
-    _sql_constraints = [
-        (
-            "date_order",
-            "CHECK (date_end IS NULL OR date_end >= date_start)",
-            "End time must be on or after start time.",
-        ),
-    ]
+    _date_order = models.Constraint(
+        "CHECK (date_end IS NULL OR date_end >= date_start)",
+        "End time must be on or after start time.",
+    )
 
     @api.depends("date_start", "date_end")
     def _compute_duration_sec(self):
