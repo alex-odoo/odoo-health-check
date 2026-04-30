@@ -2,6 +2,20 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.12.2] - 2026-04-30
+
+### Changed
+- Listing hero now shows the actual list of localised languages
+  (English / Русский / Українська / Deutsch / Español / Română /
+  Polski / العربية) inside a teal-bordered pill right under the
+  hero subtitle, so the locale list is visible above the fold and
+  doesn't depend on apps.odoo.com keeping inline `background-color`
+  styles intact (it strips them on the listing page chrome - the
+  `Odoo 18 / LGPL-3 / Free` badge row from 1.12.1 was almost
+  invisible because of this).
+- The redundant `8 languages` badge from 1.12.1 is removed; the
+  explicit list replaces it.
+
 ## [18.0.1.12.1] - 2026-04-30
 
 ### Changed
