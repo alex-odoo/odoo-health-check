@@ -1,6 +1,6 @@
 {
     "name": "Odoo Health Check",
-    "version": "18.0.1.11.3",
+    "version": "18.0.1.12.0",
     "summary": "Cron execution history, disk monitoring, monthly PostgreSQL growth reports",
     "description": """
 Odoo Health Check
@@ -14,6 +14,11 @@ Features
 * Email alert on every failed cron run
 * Disk space monitoring on OS root and Odoo filestore mount
 * Monthly PostgreSQL growth report (top tables by size, row count)
+
+Localised UI and email alerts in 8 languages: English, Russian (ru),
+Ukrainian (uk), German (de), Spanish (es), Romanian (ro), Polish (pl),
+Arabic (ar). Translations apply automatically based on the user's
+language preference.
 
 Targeted at Odoo 18 Enterprise. Community may work but is not tested.
 """,

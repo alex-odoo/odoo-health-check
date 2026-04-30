@@ -2,6 +2,35 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.12.0] - 2026-04-30
+
+### Added
+- Translations for 7 languages: Russian (`ru`), Ukrainian (`uk`),
+  German (`de`), Spanish (`es`), Romanian (`ro`), Polish (`pl`),
+  Arabic (`ar`). All field labels, selections, view titles, search
+  filters, settings help text, action names, cron names, and the
+  three mail templates (cron failure, disk alert, monthly PG report)
+  are translated. Generated from canonical Odoo `i18n_export`, all
+  files validated against `xml_term_adapter` via `i18n_import` on a
+  live Odoo 18 build container before publish.
+- Canonical `i18n/odoo_health_check.pot` template shipped alongside
+  the per-locale `.po` files for downstream contributors who want to
+  add more languages.
+
+### Changed
+- Cron callback override accepts the official 2-arg signature only;
+  the prior `*extra` shim was removed by the second-round review
+  apply commit (1caa0f9). Same for the cron-history side-channel
+  cursor try/except - the wrapping was tightened to a `with`-only
+  block since the side-cursor itself does not raise on commit.
+- `odoo_health_check.retention_days` now parses via `str.isdigit()`
+  with a `UserError` raised on non-numeric input (was `int()` +
+  `TypeError/ValueError` in 1.11.3). Empty / 0 / negative still
+  disables cleanup as documented.
+- Field definitions in `health.check.result` and `ir.cron.history`
+  reformatted to a uniform multi-line style across the module
+  (review consistency item).
+
 ## [18.0.1.11.3] - 2026-04-29
 
 ### Removed
