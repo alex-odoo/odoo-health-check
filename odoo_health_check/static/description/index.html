@@ -10,13 +10,13 @@
       <p style="font-size:15px;color:#0A1628;font-weight:600;margin-top:18px;border:2px solid #00D4AA;border-radius:6px;display:inline-block;padding:8px 18px;">
         Localized in 8 languages:
         English &middot;
-        Русский &middot;
-        Українська &middot;
+        &#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081; &middot;
+        &#1059;&#1082;&#1088;&#1072;&#1111;&#1085;&#1089;&#1100;&#1082;&#1072; &middot;
         Deutsch &middot;
-        Español &middot;
-        Română &middot;
+        Espa&#241;ol &middot;
+        Rom&#226;n&#259; &middot;
         Polski &middot;
-        <span dir="rtl">العربية</span>
+        &#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;
       </p>
     </div>
   </div>
@@ -107,8 +107,8 @@
         Thresholds are configurable per environment.
       </p>
       <p style="font-size:15px;line-height:1.6;color:#333;">
-        Email alerts fire <strong>only on worsening transitions</strong> (ok →
-        warn, ok → critical, warn → critical). Steady state and recovery never
+        Email alerts fire <strong>only on worsening transitions</strong> (ok &#8594;
+        warn, ok &#8594; critical, warn &#8594; critical). Steady state and recovery never
         notify - no hourly spam. A measurement error between two healthy samples
         is skipped when computing transitions, so a flaky filesystem read
         doesn't generate false alarms.
@@ -134,7 +134,7 @@
         On the 1st of each month at 08:00, a snapshot of the top-10 tables by
         total relation size is captured (including indexes and TOAST). The
         report compares against the previous month and emails the recipients an
-        HTML digest with size, Δ size, row count, and Δ rows per table, plus
+        HTML digest with size, &#916; size, row count, and &#916; rows per table, plus
         total database size delta.
       </p>
       <p style="font-size:15px;line-height:1.6;color:#333;">
@@ -178,7 +178,7 @@
     <div class="oe_span4" style="text-align:center;">
       <img src="screenshots/08_email_pg_report.png" alt="Monthly PostgreSQL growth report email with top tables"
            style="max-width:100%;border:1px solid #e0e0e0;border-radius:4px;"/>
-      <p style="font-size:13px;color:#666;margin-top:8px;"><strong>PG monthly digest</strong> - top-10 tables with size, Δ size, rows, Δ rows columns; total DB size delta vs the previous report; View in PG Reports button</p>
+      <p style="font-size:13px;color:#666;margin-top:8px;"><strong>PG monthly digest</strong> - top-10 tables with size, &#916; size, rows, &#916; rows columns; total DB size delta vs the previous report; View in PG Reports button</p>
     </div>
   </div>
 </section>
@@ -195,13 +195,13 @@
       </p>
       <p style="font-size:18px;line-height:2.0;color:#0A1628;font-weight:600;margin:18px 0 6px;">
         English &middot;
-        Русский &middot;
-        Українська &middot;
+        &#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081; &middot;
+        &#1059;&#1082;&#1088;&#1072;&#1111;&#1085;&#1089;&#1100;&#1082;&#1072; &middot;
         Deutsch &middot;
-        Español &middot;
-        Română &middot;
+        Espa&#241;ol &middot;
+        Rom&#226;n&#259; &middot;
         Polski &middot;
-        <span dir="rtl">العربية</span>
+        &#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;
       </p>
       <p style="font-size:13px;color:#666;margin-top:8px;">
         en &middot; ru &middot; uk &middot; de &middot; es &middot; ro &middot; pl &middot; ar
@@ -215,7 +215,7 @@
     <div class="oe_span12">
       <h2 style="color:#0A1628;font-weight:700;">Configuration</h2>
       <p style="font-size:15px;line-height:1.6;color:#333;max-width:780px;">
-        Open <strong>Health Check → Settings</strong> after installation and fill in
+        Open <strong>Health Check &#8594; Settings</strong> after installation and fill in
         whichever fields are relevant. Every email address is independent - you
         can route cron failures to engineering, disk alerts to sysadmins, and
         the PG digest to a DBA, all from one screen.

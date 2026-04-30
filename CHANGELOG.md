@@ -2,6 +2,20 @@
 
 All notable changes to this module are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Module versioning: `<odoo_major>.0.<major>.<minor>.<patch>`.
 
+## [18.0.1.12.3] - 2026-04-30
+
+### Fixed
+- apps.odoo.com listing rendered the locale list as mojibake
+  ("Localized in 8 languages: English Ð Ñ Ñ Ñ ...") because the
+  page chrome serves `index.html` interpreted as Latin-1 / cp1252
+  while the file was encoded as UTF-8. Replaced every non-ASCII
+  glyph in the listing description with HTML numeric entities
+  (`&#1056;...` for Cyrillic, `&#1575;...` for Arabic, `&#241;` for
+  Spanish tilde-n, `&#226;` / `&#259;` for Romanian a-circumflex /
+  a-breve, `&#8594;` for arrow, `&#916;` for Delta). Numeric
+  entities are pure ASCII bytes so they decode correctly regardless
+  of the page chrome's chosen charset.
+
 ## [18.0.1.12.2] - 2026-04-30
 
 ### Changed
