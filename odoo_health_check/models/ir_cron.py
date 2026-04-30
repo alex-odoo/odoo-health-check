@@ -9,11 +9,11 @@ _logger = logging.getLogger(__name__)
 class IrCron(models.Model):
     _inherit = "ir.cron"
 
-    def _callback(self, cron_name, server_action_id):
-        cron_id = self.id
+    def _callback(self, cron_name, server_action_id, job_id):
+        cron_id = self.id or job_id
         history_id = self._odoo_health_log_start(cron_id)
         try:
-            result = super()._callback(cron_name, server_action_id)
+            result = super()._callback(cron_name, server_action_id, job_id)
         except Exception:
             self._odoo_health_log_end(history_id, "failed", traceback.format_exc())
             raise

@@ -5,8 +5,8 @@ Odoo Health Check
 Daily health check for your Odoo. Catch cron failures, monitor disk
 space, see PostgreSQL growth - before your users complain.
 
-.. image:: https://img.shields.io/badge/odoo-18-714B67.svg
-    :alt: Odoo 18
+.. image:: https://img.shields.io/badge/odoo-17-714B67.svg
+    :alt: Odoo 17
 
 .. image:: https://img.shields.io/badge/license-LGPL--3-00D4AA.svg
     :alt: License: LGPL-3
@@ -122,7 +122,7 @@ Settings:
 Technical details
 =================
 
-* **Targets:** Odoo 18 Enterprise self-hosted. Community installations
+* **Targets:** Odoo 17 Enterprise self-hosted. Community installations
   also work - the module depends only on ``base`` and ``mail``.
 * **License:** LGPL-3, free.
 * **Security:** all menus and records restricted to
@@ -160,7 +160,7 @@ repository into your Odoo addons path:
 .. code-block:: bash
 
     cd /path/to/odoo/addons
-    git clone https://github.com/alex-odoo/odoo-health-check.git
+    git clone https://github.com/RteamAgency/odoo-health-check.git
     # restart Odoo, then Apps → Update Apps List → install "Odoo Health Check"
 
 Verification
@@ -168,15 +168,15 @@ Verification
 
 A 10-minute walkthrough to confirm everything works on your install is
 provided in
-`TESTING.md <https://github.com/alex-odoo/odoo-health-check/blob/main/TESTING.md>`_
+`TESTING.md <https://github.com/RteamAgency/odoo-health-check/blob/main/TESTING.md>`_
 at the repository root.
 
 Bug reports and feature requests
 ================================
 
 Source code, issues, and feature requests:
-`github.com/alex-odoo/odoo-health-check
-<https://github.com/alex-odoo/odoo-health-check>`_
+`github.com/RteamAgency/odoo-health-check
+<https://github.com/RteamAgency/odoo-health-check>`_
 
 Maintainer
 ==========

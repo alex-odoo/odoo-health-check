@@ -13,7 +13,7 @@ class TestCronOverride(OdooHealthTestCommon):
         cron = self._make_cron(code="pass")
         before = self.History.search_count([("cron_id", "=", cron.id)])
 
-        cron._callback(cron.name, cron.ir_actions_server_id.id)
+        cron._callback(cron.name, cron.ir_actions_server_id.id, cron.id)
 
         records = self.History.search(
             [("cron_id", "=", cron.id)], order="id desc",
@@ -28,7 +28,7 @@ class TestCronOverride(OdooHealthTestCommon):
         cron = self._make_cron(code="raise Exception('test boom')")
 
         with self.assertRaises(Exception) as ctx, mute_logger("odoo.addons.base.models.ir_cron"):
-            cron._callback(cron.name, cron.ir_actions_server_id.id)
+            cron._callback(cron.name, cron.ir_actions_server_id.id, cron.id)
         self.assertIn("test boom", str(ctx.exception))
 
         record = self.History.search(
@@ -67,4 +67,4 @@ class TestCronOverride(OdooHealthTestCommon):
         from the logging side."""
         cron = self._make_cron(code="pass")
         with patch.object(type(cron), "_odoo_health_log_start", return_value=None):
-            cron._callback(cron.name, cron.ir_actions_server_id.id)
+            cron._callback(cron.name, cron.ir_actions_server_id.id, cron.id)

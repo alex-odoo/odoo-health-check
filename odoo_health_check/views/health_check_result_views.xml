@@ -5,7 +5,7 @@
         <field name="name">health.check.result.list</field>
         <field name="model">health.check.result</field>
         <field name="arch" type="xml">
-            <list string="Health Check Results" create="0" edit="0">
+            <tree string="Health Check Results" create="0" edit="0">
                 <field name="date"/>
                 <field name="check_type"/>
                 <field name="mount_path"/>
@@ -17,7 +17,7 @@
                        decoration-success="status == 'ok'"
                        decoration-warning="status == 'warn'"
                        decoration-danger="status == 'critical' or status == 'error'"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -85,7 +85,7 @@
     <record id="health_check_result_action" model="ir.actions.act_window">
         <field name="name">Disk Checks</field>
         <field name="res_model">health.check.result</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="health_check_result_view_search"/>
         <field name="domain">[('check_type', 'in', ['disk_root', 'disk_filestore'])]</field>
         <field name="context">{"search_default_last_7d": 1}</field>
@@ -98,7 +98,7 @@
     <record id="health_check_pg_report_action" model="ir.actions.act_window">
         <field name="name">PG Reports</field>
         <field name="res_model">health.check.result</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="health_check_result_view_search"/>
         <field name="domain">[('check_type', '=', 'pg_report')]</field>
         <field name="help" type="html">

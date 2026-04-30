@@ -5,7 +5,7 @@
         <field name="name">ir.cron.history.list</field>
         <field name="model">ir.cron.history</field>
         <field name="arch" type="xml">
-            <list string="Cron Execution History" create="0" edit="0">
+            <tree string="Cron Execution History" create="0" edit="0">
                 <field name="date_start"/>
                 <field name="cron_id"/>
                 <field name="duration_sec" sum="Total Duration"/>
@@ -15,7 +15,7 @@
                        decoration-danger="state == 'failed'"
                        decoration-muted="state == 'running'"/>
                 <field name="server_name" optional="hide"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -79,7 +79,7 @@
     <record id="ir_cron_history_action" model="ir.actions.act_window">
         <field name="name">Cron History</field>
         <field name="res_model">ir.cron.history</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="ir_cron_history_view_search"/>
         <field name="context">{"search_default_last_7d": 1}</field>
         <field name="help" type="html">
